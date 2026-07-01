@@ -1,0 +1,243 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  city      String?
+  joinCode  String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users           User[]
+  curriculumItems CurriculumItem[]
+  subAccounts     SubAccount[]
+  subjects        Subject[]
+  classes         Class[]
+  jamaats         Jamaat[]
+}
+
+model Subject {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  createdAt DateTime @default(now())
+
+  org Organization @relation(fields: [orgId], references: [id])
+
+  @@unique([orgId, name])
+}
+
+model SubAccount {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  type      String   // "division" | "department" | "grade_level" | "program"
+  parentId  String?
+  createdAt DateTime @default(now())
+
+  org      Organization @relation(fields: [orgId], references: [id])
+  parent   SubAccount?  @relation("SubAccountChildren", fields: [parentId], references: [id])
+  children SubAccount[] @relation("SubAccountChildren")
+  classes  Class[]
+}
+
+model Section {
+  id        String   @id @default(cuid())
+  name      String
+  classId   String
+  createdAt DateTime @default(now())
+
+  class       Class        @relation(fields: [classId], references: [id])
+  enrollments Enrollment[]
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  role          String    @default("student") // "teacher" | "student" | "admin"
+  isOrgAdmin    Boolean   @default(false)
+  orgId         String?
+  avatar        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  org           Organization? @relation(fields: [orgId], references: [id])
+
+  // Teacher relations
+  taughtClasses    Class[]       @relation("TeacherClasses")
+  createdCurricula CurriculumItem[] @relation("CurriculumCreator")
+  createdAssignments Assignment[] @relation("AssignmentCreator")
+
+  // Student relations
+  enrollments   Enrollment[]
+  submissions   Submission[]
+  messages      AIMessage[]
+
+  sessions      Session[]
+  accounts      Account[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Class {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  subject      String?
+  gradeLevel   String
+  teacherId    String
+  orgId        String?
+  code         String   @unique
+  isActive     Boolean  @default(true)
+  subAccountId String?
+  jamaatId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  teacher     User         @relation("TeacherClasses", fields: [teacherId], references: [id])
+  org         Organization? @relation(fields: [orgId], references: [id])
+  enrollments Enrollment[]
+  assignments Assignment[]
+  subAccount  SubAccount?  @relation(fields: [subAccountId], references: [id])
+  sections    Section[]
+  jamaat      Jamaat?      @relation(fields: [jamaatId], references: [id])
+}
+
+model Jamaat {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  createdAt DateTime @default(now())
+
+  org     Organization @relation(fields: [orgId], references: [id])
+  classes Class[]
+
+  @@unique([orgId, name])
+}
+
+model Enrollment {
+  id         String   @id @default(cuid())
+  studentId  String
+  classId    String
+  sectionId  String?
+  enrollRole String   @default("student") // "student" | "ta" | "observer"
+  joinedAt   DateTime @default(now())
+  isActive   Boolean  @default(true)
+
+  student User     @relation(fields: [studentId], references: [id])
+  class   Class    @relation(fields: [classId], references: [id])
+  section Section? @relation(fields: [sectionId], references: [id])
+
+  @@unique([studentId, classId])
+}
+
+model Assignment {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  classId     String
+  creatorId   String
+  dueDate     DateTime?
+  maxPoints   Int      @default(100)
+  type             String   @default("written") // "written" | "code" | "quiz" | "ide"
+  isPublished      Boolean  @default(false)
+  allowedFileTypes String   @default("[]") // JSON array e.g. ["pdf","image","zip"]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  class       Class        @relation(fields: [classId], references: [id])
+  creator     User         @relation("AssignmentCreator", fields: [creatorId], references: [id])
+  submissions Submission[]
+}
+
+model Submission {
+  id           String   @id @default(cuid())
+  assignmentId String
+  studentId    String
+  content      String   @default("")
+  fileUrl      String?
+  grade        Float?
+  feedback     String?
+  submittedAt  DateTime @default(now())
+  gradedAt     DateTime?
+  status       String   @default("submitted") // "submitted" | "graded" | "late"
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id])
+  student    User       @relation(fields: [studentId], references: [id])
+
+  @@unique([assignmentId, studentId])
+}
+
+model CurriculumItem {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  subject     String
+  gradeLevel  String
+  type        String   @default("lesson") // "lesson" | "exercise" | "quiz" | "resource"
+  content     String
+  isPublic    Boolean  @default(true)
+  orgId       String?
+  creatorId   String
+  tags        String   @default("[]")
+  downloads   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creator User         @relation("CurriculumCreator", fields: [creatorId], references: [id])
+  org     Organization? @relation(fields: [orgId], references: [id])
+}
+
+model AIMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  role      String   // "user" | "assistant"
+  content   String
+  sessionId String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  event     String
+  metadata  String   @default("{}")
+  createdAt DateTime @default(now())
+}
