@@ -98,7 +98,7 @@ export default function OrgHubPage() {
           )}
           <div className="flex items-center justify-center gap-2 mt-3">
             <BookOpen className="w-3.5 h-3.5 text-blue-300" />
-            <span className="text-blue-300 text-sm">اردو تعلیمی نظام</span>
+            <span className="text-blue-300 text-sm">نقطہ کلاس روم</span>
           </div>
         </div>
 
@@ -170,7 +170,7 @@ export default function OrgHubPage() {
         </div>
 
         <p className="text-center text-blue-300 text-xs mt-6">
-          <Link href="/" className="hover:text-white transition-colors">اردو تعلیمی نظام</Link>
+          <Link href="/" className="hover:text-white transition-colors">نقطہ کلاس روم</Link>
           {" · "}
           <span className="font-mono">/org/{slug}</span>
         </p>

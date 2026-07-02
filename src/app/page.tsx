@@ -52,7 +52,7 @@ export default function LandingPage() {
             <BookOpen className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-blue-900 leading-tight">اردو تعلیمی نظام</h1>
+            <h1 className="text-lg font-bold text-blue-900 leading-tight">نقطہ کلاس روم</h1>
             <p className="text-xs text-gray-500">اردو تعلیم</p>
           </div>
         </div>
@@ -70,14 +70,14 @@ export default function LandingPage() {
       <section className="max-w-5xl mx-auto px-6 py-20 text-center">
         <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
           <span>🇵🇰</span>
-          <span>مکمل اردو تعلیمی نظام</span>
+          <span>اساتذہ اور طلبہ کے لیے</span>
         </div>
         <h2 className="text-5xl font-bold text-gray-900 mb-6 leading-tight" style={{ lineHeight: "1.4" }}>
           اردو میں سیکھیں،
           <span className="text-blue-700"> اردو میں سکھائیں</span>
         </h2>
         <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto" style={{ lineHeight: "2" }}>
-          پہلا مکمل اردو تعلیمی نظام — اساتذہ اور طلبہ کے لیے بنایا گیا، ذہین معلم، اردو کوڈ گاہ، اور آف لائن نصاب کے ساتھ۔
+          اردو پر مبنی کلاس روم پلیٹ فارم — اساتذہ اور طلبہ کے لیے بنایا گیا، ذہین معلم، اردو کوڈ گاہ، اور آف لائن نصاب کے ساتھ۔
         </p>
         <div className="flex justify-center gap-4 flex-wrap">
           <Link href="/register?role=teacher" className="btn-primary px-8 py-3 text-base">
@@ -139,7 +139,8 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-100 py-6 text-center text-gray-500 text-sm">
-        <p>اردو تعلیمی نظام © ۲۰۲۴ — تمام حقوق محفوظ</p>
+        <p>نقطہ کلاس روم © ۲۰۲۶ — تمام حقوق محفوظ</p>
+        <a href="https://nuqta.dev/?pilot=1" className="text-blue-700 hover:underline">رابطہ / تجاویز</a>
       </footer>
     </div>
   );

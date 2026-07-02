@@ -3,8 +3,8 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "اردو تعلیمی پلیٹ فارم",
-  description: "اردو زبان میں جدید تعلیمی نظام — اساتذہ اور طلبہ کے لیے",
+  title: "نقطہ کلاس روم | Nuqta Classroom",
+  description: "اردو پر مبنی کلاس روم پلیٹ فارم — اساتذہ اور طلبہ کے لیے",
 };
 
 export default function RootLayout({

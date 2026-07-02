@@ -67,7 +67,7 @@ export default function PublicLibraryPage() {
             </div>
             <div>
               <p className="font-bold text-sm text-gray-900">عالمی کتب خانہ</p>
-              <p className="text-xs text-gray-500">اردو تعلیمی نظام</p>
+              <p className="text-xs text-gray-500">نقطہ کلاس روم</p>
             </div>
           </div>
           <div className="flex gap-3">
