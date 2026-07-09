@@ -43,14 +43,14 @@ export async function POST(req: NextRequest) {
   const user = session.user as { id: string; role: string };
   if (user.role !== "teacher") return NextResponse.json({ error: "صرف اساتذہ کلاسز بنا سکتے ہیں" }, { status: 403 });
 
-  const { name, description, subject, gradeLevel, subAccountId } = await req.json();
+  const { name, description, subject, gradeLevel } = await req.json();
   if (!name || !subject || !gradeLevel) {
     return NextResponse.json({ error: "نام، مضمون اور جماعت ضروری ہے" }, { status: 400 });
   }
 
   const code = generateClassCode();
   const cls = await prisma.class.create({
-    data: { name, description, subject, gradeLevel, teacherId: user.id, code, subAccountId: subAccountId || null },
+    data: { name, description, subject, gradeLevel, teacherId: user.id, code },
   });
 
   return NextResponse.json(cls, { status: 201 });

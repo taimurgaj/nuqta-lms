@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { User, Lock, Check, AlertCircle, ShieldCheck, Copy, Eye, EyeOff } from "lucide-react";
+import { User, Lock, Check, AlertCircle, ShieldCheck, Copy, Eye, EyeOff, Moon, Sun } from "lucide-react";
+import { useTheme } from "@/app/theme-provider";
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
@@ -99,9 +100,37 @@ export default function SettingsPage() {
     }
   }
 
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <DashboardLayout title="ترتیبات" subtitle="اپنا کھاتہ منظم کریں">
       <div className="max-w-lg space-y-6">
+
+        {/* Theme toggle */}
+        <div className="card p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-blue-100 dark:bg-blue-900 rounded-xl flex items-center justify-center">
+                {theme === "dark" ? (
+                  <Moon className="w-5 h-5 text-blue-700 dark:text-blue-300" />
+                ) : (
+                  <Sun className="w-5 h-5 text-blue-700 dark:text-blue-300" />
+                )}
+              </div>
+              <div>
+                <h2 className="font-bold text-gray-900">ظہور</h2>
+                <p className="text-xs text-gray-500">روشن یا تاریک تھیم منتخب کریں</p>
+              </div>
+            </div>
+            <button
+              onClick={toggleTheme}
+              className="btn-secondary text-sm"
+              aria-label="تھیم بدلیں"
+            >
+              {theme === "dark" ? "روشن موڈ" : "تاریک موڈ"}
+            </button>
+          </div>
+        </div>
 
         {/* Join code — org admins only */}
         {u?.isOrgAdmin && (

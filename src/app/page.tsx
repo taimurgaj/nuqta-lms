@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { BookOpen, Users, Brain, Code2, Library, BarChart3, ArrowLeft, GraduationCap, Building2 } from "lucide-react";
+import { DemoLoginButtons } from "@/components/DemoLoginButtons";
 
 const features = [
   {
@@ -24,14 +25,14 @@ const features = [
   },
   {
     icon: <Code2 className="w-6 h-6" />,
-    title: "اردو کوڈ گاہ",
+    title: "اردو اڈا",
     desc: "اردو میں رمز نویسی سیکھیں اور رمز لکھیں",
     color: "bg-orange-100 text-orange-700",
   },
   {
     icon: <Library className="w-6 h-6" />,
-    title: "کتب خانہ",
-    desc: "اساتذہ آپس میں تعلیمی مواد بانٹیں",
+    title: "مقرر نصاب",
+    desc: "بنیادی سے لے کر پروجیکٹس تک، ۲۰ تیار سبق",
     color: "bg-teal-100 text-teal-700",
   },
   {
@@ -45,6 +46,17 @@ const features = [
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50" dir="rtl">
+      {/* Site nav strip */}
+      <div className="bg-gray-950 px-6 py-2.5 flex items-center justify-between text-sm">
+        <div className="flex items-center gap-5 flex-wrap">
+          <a href="https://learn.nuqta.dev" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">اسباق</a>
+          <a href="https://ide.nuqta.dev" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">اڈا</a>
+          <a href="https://keyboard.nuqta.dev" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">کی-بورڈ</a>
+          <a href="https://nuqta.dev/about" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">ہمارے بارے میں</a>
+          <a href="mailto:taimur.gaj@gmail.com" className="text-gray-300 hover:text-white transition-colors">رابطہ / تجاویز</a>
+        </div>
+        <a href="https://nuqta.dev" target="_blank" rel="noopener noreferrer" className="font-bold text-white">نقطہ</a>
+      </div>
       {/* Header */}
       <header className="bg-white border-b border-blue-100 px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm">
         <div className="flex items-center gap-3">
@@ -69,7 +81,6 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="max-w-5xl mx-auto px-6 py-20 text-center">
         <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
-          <span>🇵🇰</span>
           <span>اساتذہ اور طلبہ کے لیے</span>
         </div>
         <h2 className="text-5xl font-bold text-gray-900 mb-6 leading-tight" style={{ lineHeight: "1.4" }}>
@@ -77,9 +88,9 @@ export default function LandingPage() {
           <span className="text-blue-700"> اردو میں سکھائیں</span>
         </h2>
         <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto" style={{ lineHeight: "2" }}>
-          اردو پر مبنی کلاس روم پلیٹ فارم — اساتذہ اور طلبہ کے لیے بنایا گیا، ذہین معلم، اردو کوڈ گاہ، اور آف لائن نصاب کے ساتھ۔
+          اردو پر مبنی کلاس روم پلیٹ فارم — اساتذہ اور طلبہ کے لیے بنایا گیا، ذہین معلم، اردو اڈا، اور آف لائن نصاب کے ساتھ۔
         </p>
-        <div className="flex justify-center gap-4 flex-wrap">
+        <div className="flex justify-center gap-4 flex-wrap mb-6">
           <Link href="/register?role=teacher" className="btn-primary px-8 py-3 text-base">
             استاد کے طور پر شروع کریں
             <ArrowLeft className="w-4 h-4" />
@@ -87,6 +98,14 @@ export default function LandingPage() {
           <Link href="/register?role=student" className="btn-secondary px-8 py-3 text-base">
             طالب علم کے طور پر شروع کریں
           </Link>
+        </div>
+
+        <div className="bg-gray-900 rounded-2xl p-6 max-w-xl mx-auto">
+          <p className="text-white text-sm mb-4">
+            کھاتہ بنائے بغیر دیکھنا چاہتے ہیں؟ ایک تیار شدہ نمونہ جماعت آزمائیں —
+            ۵ طلبہ، مشقیں، اور نتائج کے ساتھ۔
+          </p>
+          <DemoLoginButtons />
         </div>
       </section>
 
@@ -139,8 +158,14 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-100 py-6 text-center text-gray-500 text-sm">
-        <p>نقطہ کلاس روم © ۲۰۲۶ — تمام حقوق محفوظ</p>
-        <a href="https://nuqta.dev/?pilot=1" className="text-blue-700 hover:underline">رابطہ / تجاویز</a>
+        <p className="mb-2">نقطہ کلاس روم © ۲۰۲۶ — تمام حقوق محفوظ</p>
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+          <a href="https://nuqta.dev" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">nuqta.dev</a>
+          <a href="https://learn.nuqta.dev" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">اسباق</a>
+          <a href="https://ide.nuqta.dev" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">اڈا</a>
+          <a href="https://nuqta.dev/about" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">ہمارے بارے میں</a>
+          <a href="mailto:taimur.gaj@gmail.com" className="text-blue-700 hover:underline">رابطہ / تجاویز</a>
+        </div>
       </footer>
     </div>
   );

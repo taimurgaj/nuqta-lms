@@ -36,7 +36,7 @@ interface ClassDetail {
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  written: "تحریری", code: "رمز نویسی", quiz: "آزمائش", ide: "کوڈ گاہ", other: "دیگر",
+  written: "تحریری", code: "رمز نویسی", quiz: "آزمائش", ide: "اڈا", other: "دیگر",
 };
 
 export default function StudentClassDetail() {
@@ -100,7 +100,7 @@ export default function StudentClassDetail() {
           <p className={`text-2xl font-bold ${avg === null ? "text-gray-300" : avg >= 80 ? "text-green-600" : avg >= 60 ? "text-yellow-600" : "text-red-600"}`}>
             {avg !== null ? `${avg}%` : "—"}
           </p>
-          <p className="text-xs text-gray-500 mt-1">اوسط نمبر</p>
+          <p className="text-xs text-gray-500 mt-1">اوسط پوائنٹس</p>
         </div>
       </div>
 
@@ -137,7 +137,7 @@ export default function StudentClassDetail() {
               const isLate = a.dueDate && new Date() > new Date(a.dueDate) && !sub;
               const pct = sub?.grade !== null && sub?.grade !== undefined ? (sub.grade / a.maxPoints) * 100 : null;
               return (
-                <div key={a.id} className="card p-4">
+                <Link key={a.id} href={`/student/assignments?highlight=${a.id}`} className="card p-4 block hover:bg-gray-50 transition-colors">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
@@ -163,7 +163,7 @@ export default function StudentClassDetail() {
                               {new Date(a.dueDate).toLocaleDateString("ur-PK")}
                             </span>
                           )}
-                          <span>{a.maxPoints} نمبر</span>
+                          <span>{a.maxPoints} پوائنٹس</span>
                         </div>
                       </div>
                     </div>
@@ -186,7 +186,7 @@ export default function StudentClassDetail() {
                       <p className="text-sm text-blue-800">{sub.feedback}</p>
                     </div>
                   )}
-                </div>
+                </Link>
               );
             })
           )}
@@ -212,8 +212,8 @@ export default function StudentClassDetail() {
                 <thead>
                   <tr>
                     <th>مشق</th>
-                    <th className="text-center">کل نمبر</th>
-                    <th className="text-center">میرے نمبر</th>
+                    <th className="text-center">کل پوائنٹس</th>
+                    <th className="text-center">میرے پوائنٹس</th>
                     <th className="text-center">فیصد</th>
                     <th className="text-center">صورتحال</th>
                   </tr>
@@ -227,7 +227,9 @@ export default function StudentClassDetail() {
                     return (
                       <tr key={a.id}>
                         <td>
-                          <p className="font-medium text-gray-900">{a.title}</p>
+                          <Link href={`/student/assignments?highlight=${a.id}`} className="font-medium text-gray-900 hover:text-blue-600 hover:underline">
+                            {a.title}
+                          </Link>
                           {a.dueDate && (
                             <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
                               <Clock className="w-3 h-3" />

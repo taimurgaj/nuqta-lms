@@ -3,58 +3,67 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+// Must match DEMO_PASSWORD in src/components/DemoLoginButtons.tsx — that's
+// the "test run" flow linked from the nuqta.dev marketing site.
+const DEMO_PASSWORD = "NuqtaDemo2026!";
+
 async function main() {
   console.log("ڈیٹا بیس میں ابتدائی ڈیٹا شامل کر رہے ہیں...");
 
-  // Demo organisation — required for the login flow (org search step)
+  // Demo org — tier "demo" means it only sees the 5-lesson set (see
+  // src/app/api/curriculum/route.ts), matching learn.nuqta.dev exactly.
+  // slug/name/joinCode match the org that already exists in production
+  // (created outside this seed file at some point) — upserting on the wrong
+  // slug here would create a second, unused duplicate org instead of
+  // updating the real one.
   const org = await prisma.organization.upsert({
-    where: { slug: "demo-school" },
-    update: {},
+    where: { slug: "nuqta-demo" },
+    update: { tier: "demo" },
     create: {
-      name: "نمونہ اسکول",
-      slug: "demo-school",
+      name: "نقطہ ڈیمو اسکول",
+      slug: "nuqta-demo",
       city: "لاہور",
       joinCode: "SCHOOL01",
+      tier: "demo",
     },
   });
 
-  // Demo teacher
-  const teacherPw = await bcrypt.hash("teacher123", 12);
+  // These are the two accounts the public "test run" demo-login buttons sign
+  // into (DemoLoginButtons.tsx) — name deliberately a plain full name, not a
+  // "Teacher ___" / "استاد ___" title+name pattern.
+  const demoPw = await bcrypt.hash(DEMO_PASSWORD, 12);
   const teacher = await prisma.user.upsert({
-    where: { email: "teacher@urduedtech.pk" },
-    update: {},
+    where: { email: "demo-teacher@nuqta.dev" },
+    update: { name: "ڈیمو استاد", password: demoPw, orgId: org.id, isOrgAdmin: true },
     create: {
-      name: "احمد علی",
-      email: "teacher@urduedtech.pk",
-      password: teacherPw,
+      name: "ڈیمو استاد",
+      email: "demo-teacher@nuqta.dev",
+      password: demoPw,
       role: "teacher",
       isOrgAdmin: true,
       orgId: org.id,
     },
   });
 
-  // Demo student
-  const studentPw = await bcrypt.hash("student123", 12);
   const student = await prisma.user.upsert({
-    where: { email: "student@urduedtech.pk" },
-    update: {},
+    where: { email: "demo-student@nuqta.dev" },
+    update: { name: "ڈیمو طالب علم", password: demoPw, orgId: org.id },
     create: {
-      name: "فاطمہ زہرا",
-      email: "student@urduedtech.pk",
-      password: studentPw,
+      name: "ڈیمو طالب علم",
+      email: "demo-student@nuqta.dev",
+      password: demoPw,
       role: "student",
       orgId: org.id,
     },
   });
 
-  // Demo class — programming, not literature
   const cls = await prisma.class.upsert({
     where: { code: "URDU01" },
     update: {},
     create: {
-      name: "اردو پروگرامنگ — ششم جماعت",
-      description: "اردو زبان میں کوڈنگ سیکھیں",
-      subject: "اردو پروگرامنگ",
+      name: "نقطہ پروگرامنگ — ششم جماعت",
+      description: "نقطہ زبان میں کوڈنگ سیکھیں",
+      subject: "نقطہ پروگرامنگ",
       gradeLevel: "ششم",
       teacherId: teacher.id,
       orgId: org.id,
@@ -62,14 +71,15 @@ async function main() {
     },
   });
 
-  // Enroll student
   await prisma.enrollment.upsert({
     where: { studentId_classId: { studentId: student.id, classId: cls.id } },
     update: {},
     create: { studentId: student.id, classId: cls.id },
   });
 
-  // Demo assignments — programming tasks
+  // Demo assignments — reference the fixed curriculum by lesson title, not by
+  // authoring new content (curriculum itself is seeded separately, see
+  // prisma/seed-curriculum.ts).
   await prisma.assignment.upsert({
     where: { id: "demo-assignment-1" },
     update: {},
@@ -81,7 +91,7 @@ async function main() {
 مثال:
 لکھو("سلام دنیا")؛
 لکھو("میرا نام احمد ہے")؛
-لکھو("مجھے اردو پروگرامنگ پسند ہے")؛`,
+لکھو("مجھے نقطہ پروگرامنگ پسند ہے")؛`,
       classId: cls.id,
       creatorId: teacher.id,
       maxPoints: 10,
@@ -118,8 +128,8 @@ async function main() {
     update: {},
     create: {
       id: "demo-assignment-3",
-      title: "سبق ۴: اگر/وگرنہ",
-      description: `ایک عدد رکھیں اور اگر/وگرنہ سے جانچیں کہ وہ ۱۰ سے بڑا ہے یا چھوٹا۔`,
+      title: "سبق ۳: اگر/ورنہ",
+      description: `ایک عدد رکھیں اور اگر/ورنہ سے جانچیں کہ وہ ۱۰ سے بڑا ہے یا چھوٹا۔`,
       classId: cls.id,
       creatorId: teacher.id,
       maxPoints: 20,
@@ -128,90 +138,16 @@ async function main() {
     },
   });
 
-  // Demo curriculum items — programming lessons
-  await prisma.curriculumItem.upsert({
-    where: { id: "demo-curriculum-1" },
-    update: {},
-    create: {
-      id: "demo-curriculum-1",
-      title: "اردو پروگرامنگ — بنیادی الفاظ",
-      description: "اردو زبان کے کوڈنگ کلیدی الفاظ کا تعارف",
-      subject: "اردو پروگرامنگ",
-      gradeLevel: "ششم",
-      type: "lesson",
-      content: `اردو پروگرامنگ زبان کے بنیادی الفاظ:
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-لکھو("...")؛          ← اسکرین پر پیغام دکھائیں
-رکھو نام = قدر؛      ← متغیر بنائیں
-پڑھو()               ← صارف سے ان پٹ لیں
-━━━━━━━━━━━━━━━━━━━━━━━━
-
-اگر (شرط) {          ← اگر شرط سچ ہو تو
-  ...
-} وگرنہ {            ← ورنہ
-  ...
-}
-
-جب تک (شرط) {        ← جب تک شرط سچ ہو دہراتے رہو
-  ...
-}
-
-فنکشن نام() {        ← دوبارہ قابل استعمال کوڈ
-  واپس قدر؛
-}
-━━━━━━━━━━━━━━━━━━━━━━━━
-
-مثال — پہلا پروگرام:
-
-لکھو("سلام دنیا")؛`,
-      isPublic: true,
-      creatorId: teacher.id,
-      tags: JSON.stringify(["اردو پروگرامنگ", "بنیادی", "ابتدائی"]),
-    },
-  });
-
-  await prisma.curriculumItem.upsert({
-    where: { id: "demo-curriculum-2" },
-    update: {},
-    create: {
-      id: "demo-curriculum-2",
-      title: "اردو پروگرامنگ — متغیرات اور ان پٹ",
-      description: "رکھو اور پڑھو() کا استعمال",
-      subject: "اردو پروگرامنگ",
-      gradeLevel: "ششم",
-      type: "lesson",
-      content: `متغیرات سے ڈیٹا محفوظ کریں اور صارف سے ان پٹ لیں:
-
-رکھو نام = "احمد"؛
-رکھو عمر = ۱۵؛
-لکھو("ہیلو " + نام)؛
-
-صارف سے ان پٹ لینا (Flask IDE میں):
-رکھو نام = پڑھو()؛
-لکھو("آپ کا نام " + نام + " ہے")؛
-
-اعداد کے ساتھ حساب:
-رکھو الف = ۵؛
-رکھو ب = ۳؛
-لکھو(الف + ب)؛
-لکھو(الف - ب)؛
-لکھو(الف * ب)؛`,
-      isPublic: true,
-      creatorId: teacher.id,
-      tags: JSON.stringify(["متغیرات", "ان پٹ", "پڑھو"]),
-    },
-  });
-
   console.log("ابتدائی ڈیٹا کامیابی سے شامل ہو گیا!");
-  console.log("\nڈیمو اکاؤنٹ:");
-  console.log("ادارہ: نمونہ اسکول (demo-school)  ← لاگ ان پر پہلے یہ تلاش کریں");
-  console.log("استاد: teacher@urduedtech.pk / teacher123");
-  console.log("طالب علم: student@urduedtech.pk / student123");
+  console.log("\nڈیمو اکاؤنٹ (ٹیسٹ رن — نقطہ.dev سے منسلک):");
+  console.log("ادارہ: نقطہ ڈیمو اسکول (nuqta-demo)");
+  console.log(`استاد: demo-teacher@nuqta.dev / ${DEMO_PASSWORD}`);
+  console.log(`طالب علم: demo-student@nuqta.dev / ${DEMO_PASSWORD}`);
   console.log("کلاس کوڈ: URDU01");
-  console.log("ادارے کا کوڈ: SCHOOL01");
+  console.log(`ادارے کا کوڈ: ${org.joinCode}`);
+  console.log("\nنصاب سیڈ کرنے کے لیے چلائیں: npm run db:seed-curriculum");
 }
 
 main()
-  .catch(console.error)
+  .catch((e) => { console.error(e); process.exit(1); })
   .finally(() => prisma.$disconnect());

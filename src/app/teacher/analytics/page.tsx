@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
 import { TrendingUp, Users, BookOpen, ClipboardList, CheckCircle, Clock, AlertCircle } from "lucide-react";
@@ -18,6 +19,7 @@ interface AnalyticsData {
   recentActivity: Array<{
     student: string;
     assignment: string;
+    assignmentId: string;
     grade: number | null;
     status: string;
     date: string;
@@ -30,8 +32,6 @@ interface AnalyticsData {
     submissions: number;
   }>;
 }
-
-const COLORS = ["#1e40af", "#059669", "#d97706", "#7c3aed", "#dc2626"];
 
 export default function TeacherAnalytics() {
   const [data, setData] = useState<AnalyticsData | null>(null);
@@ -59,9 +59,9 @@ export default function TeacherAnalytics() {
   ].filter((d) => d.value > 0) : [];
 
   const classChartData = data?.classStats?.map((c) => ({
-    name: c.name.length > 10 ? c.name.slice(0, 10) + "..." : c.name,
+    name: c.name.length > 16 ? c.name.slice(0, 16) + "…" : c.name,
+    fullName: c.name,
     طلبہ: c.students,
-    مشقیں: c.assignments,
     جمع: c.submissions,
   })) || [];
 
@@ -72,7 +72,7 @@ export default function TeacherAnalytics() {
           {[
             { label: "کل جماعتیں", value: data?.totalClasses || 0, icon: <BookOpen className="w-5 h-5" />, color: "bg-blue-100 text-blue-700" },
             { label: "کل طلبہ", value: data?.totalStudents || 0, icon: <Users className="w-5 h-5" />, color: "bg-green-100 text-green-700" },
-            { label: "اوسط نمبر", value: `${data?.avgGrade || 0}%`, icon: <TrendingUp className="w-5 h-5" />, color: "bg-purple-100 text-purple-700" },
+            { label: "اوسط پوائنٹس", value: `${data?.avgGrade || 0}%`, icon: <TrendingUp className="w-5 h-5" />, color: "bg-purple-100 text-purple-700" },
             { label: "جمع کرانے کی شرح", value: `${data?.submissionRate || 0}%`, icon: <ClipboardList className="w-5 h-5" />, color: "bg-orange-100 text-orange-700" },
           ].map((s) => (
             <div key={s.label} className="stat-card">
@@ -91,12 +91,23 @@ export default function TeacherAnalytics() {
             {classChartData.length === 0 ? (
               <div className="h-48 flex items-center justify-center text-gray-400">ابھی کوئی معلومات نہیں</div>
             ) : (
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={classChartData} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip />
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={classChartData} margin={{ top: 0, right: 10, left: -20, bottom: 32 }} barGap={4}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 11 }}
+                    interval={0}
+                    angle={-25}
+                    textAnchor="end"
+                    height={50}
+                  />
+                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip
+                    labelFormatter={(_, payload) => payload?.[0]?.payload?.fullName ?? ""}
+                    contentStyle={{ direction: "rtl", fontFamily: "var(--font-urdu), serif" }}
+                  />
+                  <Legend wrapperStyle={{ fontFamily: "var(--font-urdu), serif", fontSize: 12 }} />
                   <Bar dataKey="طلبہ" fill="#1e40af" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="جمع" fill="#059669" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -109,23 +120,28 @@ export default function TeacherAnalytics() {
             {submissionStatusData.length === 0 ? (
               <div className="h-48 flex items-center justify-center text-gray-400">ابھی کوئی معلومات نہیں</div>
             ) : (
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
                   <Pie
                     data={submissionStatusData}
                     cx="50%"
-                    cy="50%"
+                    cy="45%"
                     innerRadius={55}
                     outerRadius={90}
                     dataKey="value"
-                    label={({ name, percent }: { name?: string; percent?: number }) => `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                    paddingAngle={2}
+                    label={({ percent }: { percent?: number }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
                     labelLine={false}
                   >
                     {submissionStatusData.map((entry, index) => (
                       <Cell key={index} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip contentStyle={{ direction: "rtl", fontFamily: "var(--font-urdu), serif" }} />
+                  <Legend
+                    verticalAlign="bottom"
+                    wrapperStyle={{ fontFamily: "var(--font-urdu), serif", fontSize: 12 }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             )}
@@ -144,7 +160,7 @@ export default function TeacherAnalytics() {
                 <tr>
                   <th>طالب علم</th>
                   <th>مشق</th>
-                  <th>نمبر</th>
+                  <th>پوائنٹس</th>
                   <th>صورتحال</th>
                   <th>تاریخ</th>
                 </tr>
@@ -153,7 +169,11 @@ export default function TeacherAnalytics() {
                 {data.recentActivity.map((a, i) => (
                   <tr key={i}>
                     <td className="font-medium">{a.student}</td>
-                    <td className="text-gray-600">{a.assignment}</td>
+                    <td>
+                      <Link href={`/teacher/assignments?highlight=${a.assignmentId}`} className="text-gray-600 hover:text-blue-600 hover:underline">
+                        {a.assignment}
+                      </Link>
+                    </td>
                     <td>
                       {a.grade !== null ? (
                         <span className={`font-bold ${a.grade >= 80 ? "text-green-600" : a.grade >= 60 ? "text-yellow-600" : "text-red-600"}`}>
@@ -200,7 +220,11 @@ export default function TeacherAnalytics() {
                   : 0;
                 return (
                   <tr key={c.id}>
-                    <td className="font-medium">{c.name}</td>
+                    <td className="font-medium">
+                      <Link href={`/teacher/classes/${c.id}`} className="hover:text-blue-600 hover:underline">
+                        {c.name}
+                      </Link>
+                    </td>
                     <td>{c.students}</td>
                     <td>{c.assignments}</td>
                     <td>{c.submissions}</td>

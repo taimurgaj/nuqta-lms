@@ -63,6 +63,18 @@ export default function StudentAssignments() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Deep-link support: /student/assignments?highlight=<id> expands and scrolls to that exercise
+  useEffect(() => {
+    if (!assignments.length) return;
+    const highlight = new URLSearchParams(window.location.search).get("highlight");
+    if (highlight && assignments.some((a) => a.id === highlight)) {
+      setExpandedId(highlight);
+      requestAnimationFrame(() => {
+        document.getElementById(`assignment-${highlight}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    }
+  }, [assignments]);
+
   // Listen for code coming back from the IDE iframe
   useEffect(() => {
     function handler(e: MessageEvent) {
@@ -159,7 +171,7 @@ export default function StudentAssignments() {
   }
 
   const typeLabels: Record<string, string> = {
-    written: "تحریری", code: "رمز نویسی", quiz: "آزمائش", ide: "کوڈ گاہ", other: "دیگر",
+    written: "تحریری", code: "رمز نویسی", quiz: "آزمائش", ide: "اڈا", other: "دیگر",
   };
   const pending = assignments.filter((a) => !a.submissions.length);
   const submitted = assignments.filter((a) => a.submissions.length > 0);
@@ -171,7 +183,7 @@ export default function StudentAssignments() {
     const allowedTypes: string[] = JSON.parse(a.allowedFileTypes || "[]");
 
     return (
-      <div className="card overflow-hidden">
+      <div id={`assignment-${a.id}`} className="card overflow-hidden scroll-mt-4">
         <div
           className="p-4 flex items-center gap-4 cursor-pointer hover:bg-gray-50 transition-colors"
           onClick={() => setExpandedId(expanded ? null : a.id)}
@@ -204,7 +216,7 @@ export default function StudentAssignments() {
                   {new Date(a.dueDate).toLocaleDateString("ur-PK")}
                 </span>
               )}
-              <span>{a.maxPoints} نمبر</span>
+              <span>{a.maxPoints} پوائنٹس</span>
             </div>
           </div>
 
@@ -238,7 +250,7 @@ export default function StudentAssignments() {
                   {sub.content && (a.type === "ide" || a.type === "code") && (
                     <div className="mt-2">
                       <p className="text-xs text-gray-400 mb-1 flex items-center gap-1"><Code2 className="w-3 h-3" />جمع کیا گیا کوڈ</p>
-                      <pre className="font-mono text-xs bg-gray-900 text-green-300 rounded-lg p-3 max-h-48 overflow-y-auto whitespace-pre-wrap" dir="ltr">
+                      <pre className="font-mono text-xs bg-gray-900 text-green-300 rounded-lg p-3 max-h-48 overflow-y-auto whitespace-pre-wrap text-center" dir="rtl">
                         {sub.content}
                       </pre>
                     </div>
@@ -263,7 +275,7 @@ export default function StudentAssignments() {
             ) : (
               <button onClick={() => openSubmit(a.id)} className="btn-primary text-sm">
                 <Send className="w-4 h-4" />
-                {a.type === "ide" ? "کوڈ گاہ کھولیں" : "جواب پیش کریں"}
+                {a.type === "ide" ? "اڈا کھولیں" : "جواب پیش کریں"}
               </button>
             )}
           </div>
@@ -342,7 +354,7 @@ export default function StudentAssignments() {
             ref={iframeRef}
             src={`https://ide.nuqta.dev?assignmentId=${submitId}&studentName=${encodeURIComponent(studentName)}`}
             className="flex-1 w-full border-0"
-            title="اردو کوڈ گاہ"
+            title="اردو اڈا"
             allow="clipboard-read; clipboard-write"
           />
         </div>

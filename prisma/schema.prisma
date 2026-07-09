@@ -1,3 +1,10 @@
+// Simplified pilot schema (2026-07): School → Class → Lesson.
+// The previous multi-tenant/multi-subject design (Jamaat, SubAccount, Subject,
+// teacher-authored CurriculumItem library) is archived, not deleted — see
+// prisma/archive/schema.full-multitenant.prisma for the full-school/all-subject
+// version to reintroduce later. Do not add SubAccount/Jamaat/Subject back into
+// this file without a deliberate migration plan.
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,78 +20,39 @@ model Organization {
   slug      String   @unique
   city      String?
   joinCode  String   @unique
+  tier      String   @default("pilot") // "demo" (test-run, 5-lesson set) | "pilot" (real school, full 20-lesson set)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users           User[]
-  curriculumItems CurriculumItem[]
-  subAccounts     SubAccount[]
-  subjects        Subject[]
-  classes         Class[]
-  jamaats         Jamaat[]
-}
-
-model Subject {
-  id        String   @id @default(cuid())
-  orgId     String
-  name      String
-  createdAt DateTime @default(now())
-
-  org Organization @relation(fields: [orgId], references: [id])
-
-  @@unique([orgId, name])
-}
-
-model SubAccount {
-  id        String   @id @default(cuid())
-  orgId     String
-  name      String
-  type      String   // "division" | "department" | "grade_level" | "program"
-  parentId  String?
-  createdAt DateTime @default(now())
-
-  org      Organization @relation(fields: [orgId], references: [id])
-  parent   SubAccount?  @relation("SubAccountChildren", fields: [parentId], references: [id])
-  children SubAccount[] @relation("SubAccountChildren")
-  classes  Class[]
-}
-
-model Section {
-  id        String   @id @default(cuid())
-  name      String
-  classId   String
-  createdAt DateTime @default(now())
-
-  class       Class        @relation(fields: [classId], references: [id])
-  enrollments Enrollment[]
+  users   User[]
+  classes Class[]
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  password      String
-  role          String    @default("student") // "teacher" | "student" | "admin"
-  isOrgAdmin    Boolean   @default(false)
-  orgId         String?
-  avatar        String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id         String   @id @default(cuid())
+  name       String
+  email      String   @unique
+  password   String
+  role       String   @default("student") // "teacher" | "student" | "admin"
+  isOrgAdmin Boolean  @default(false)
+  orgId      String?
+  avatar     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  org           Organization? @relation(fields: [orgId], references: [id])
+  org Organization? @relation(fields: [orgId], references: [id])
 
   // Teacher relations
-  taughtClasses    Class[]       @relation("TeacherClasses")
-  createdCurricula CurriculumItem[] @relation("CurriculumCreator")
+  taughtClasses      Class[]      @relation("TeacherClasses")
   createdAssignments Assignment[] @relation("AssignmentCreator")
 
   // Student relations
-  enrollments   Enrollment[]
-  submissions   Submission[]
-  messages      AIMessage[]
+  enrollments Enrollment[]
+  submissions Submission[]
+  messages    AIMessage[]
 
-  sessions      Session[]
-  accounts      Account[]
+  sessions Session[]
+  accounts Account[]
 }
 
 model Account {
@@ -115,70 +83,51 @@ model Session {
 }
 
 model Class {
-  id           String   @id @default(cuid())
-  name         String
-  description  String?
-  subject      String?
-  gradeLevel   String
-  teacherId    String
-  orgId        String?
-  code         String   @unique
-  isActive     Boolean  @default(true)
-  subAccountId String?
-  jamaatId     String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  subject     String?
+  gradeLevel  String
+  teacherId   String
+  orgId       String?
+  code        String   @unique
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   teacher     User         @relation("TeacherClasses", fields: [teacherId], references: [id])
   org         Organization? @relation(fields: [orgId], references: [id])
   enrollments Enrollment[]
   assignments Assignment[]
-  subAccount  SubAccount?  @relation(fields: [subAccountId], references: [id])
-  sections    Section[]
-  jamaat      Jamaat?      @relation(fields: [jamaatId], references: [id])
-}
-
-model Jamaat {
-  id        String   @id @default(cuid())
-  orgId     String
-  name      String
-  createdAt DateTime @default(now())
-
-  org     Organization @relation(fields: [orgId], references: [id])
-  classes Class[]
-
-  @@unique([orgId, name])
 }
 
 model Enrollment {
   id         String   @id @default(cuid())
   studentId  String
   classId    String
-  sectionId  String?
   enrollRole String   @default("student") // "student" | "ta" | "observer"
   joinedAt   DateTime @default(now())
   isActive   Boolean  @default(true)
 
-  student User     @relation(fields: [studentId], references: [id])
-  class   Class    @relation(fields: [classId], references: [id])
-  section Section? @relation(fields: [sectionId], references: [id])
+  student User  @relation(fields: [studentId], references: [id])
+  class   Class @relation(fields: [classId], references: [id])
 
   @@unique([studentId, classId])
 }
 
 model Assignment {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  classId     String
-  creatorId   String
-  dueDate     DateTime?
-  maxPoints   Int      @default(100)
-  type             String   @default("written") // "written" | "code" | "quiz" | "ide"
-  isPublished      Boolean  @default(false)
-  allowedFileTypes String   @default("[]") // JSON array e.g. ["pdf","image","zip"]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String    @id @default(cuid())
+  title            String
+  description      String
+  classId          String
+  creatorId        String
+  dueDate          DateTime?
+  maxPoints        Int       @default(100)
+  type             String    @default("written") // "written" | "code" | "quiz" | "ide"
+  isPublished      Boolean   @default(false)
+  allowedFileTypes String    @default("[]") // JSON array e.g. ["pdf","image","zip"]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   class       Class        @relation(fields: [classId], references: [id])
   creator     User         @relation("AssignmentCreator", fields: [creatorId], references: [id])
@@ -186,16 +135,16 @@ model Assignment {
 }
 
 model Submission {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   assignmentId String
   studentId    String
-  content      String   @default("")
+  content      String    @default("")
   fileUrl      String?
   grade        Float?
   feedback     String?
-  submittedAt  DateTime @default(now())
+  submittedAt  DateTime  @default(now())
   gradedAt     DateTime?
-  status       String   @default("submitted") // "submitted" | "graded" | "late"
+  status       String    @default("submitted") // "submitted" | "graded" | "late"
 
   assignment Assignment @relation(fields: [assignmentId], references: [id])
   student    User       @relation(fields: [studentId], references: [id])
@@ -203,24 +152,20 @@ model Submission {
   @@unique([assignmentId, studentId])
 }
 
+// The fixed Nuqta lesson catalog — seeded from content/pilot-curriculum/*.mdx,
+// not authored by teachers. `tier` controls who can see it: "demo" lessons
+// (the same 5 shown on learn.nuqta.dev) are visible to every org; "pilot"
+// lessons (the other 15) are only visible to orgs with tier="pilot".
 model CurriculumItem {
-  id          String   @id @default(cuid())
-  title       String
+  id         String   @id @default(cuid())
+  slug       String   @unique // matches the .mdx filename, e.g. "07-break-continue"
+  title      String
   description String
-  subject     String
-  gradeLevel  String
-  type        String   @default("lesson") // "lesson" | "exercise" | "quiz" | "resource"
-  content     String
-  isPublic    Boolean  @default(true)
-  orgId       String?
-  creatorId   String
-  tags        String   @default("[]")
-  downloads   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  creator User         @relation("CurriculumCreator", fields: [creatorId], references: [id])
-  org     Organization? @relation(fields: [orgId], references: [id])
+  order      Int
+  tier       String   @default("pilot") // "demo" | "pilot"
+  content    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model AIMessage {

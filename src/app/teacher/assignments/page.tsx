@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { ViewInIdeButton } from "@/components/ViewInIdeButton";
 import { Plus, ClipboardList, Clock, Users, Eye, X, Send, FileText, Award, Check, Code2 } from "lucide-react";
 
 interface Assignment {
@@ -21,11 +22,19 @@ interface ClassOption {
   name: string;
 }
 
+interface CurriculumOption {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  order: number;
+}
+
 const TYPE_LABELS: Record<string, string> = {
   written: "تحریری",
   code: "رمز نویسی",
   quiz: "آزمائش",
-  ide: "کوڈ گاہ",
+  ide: "اڈا",
   other: "دیگر",
 };
 
@@ -40,6 +49,8 @@ const PRESET_TYPES = [
 export default function TeacherAssignments() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [classes, setClasses] = useState<ClassOption[]>([]);
+  const [curriculumItems, setCurriculumItems] = useState<CurriculumOption[]>([]);
+  const [selectedCurriculumId, setSelectedCurriculumId] = useState("");
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [viewId, setViewId] = useState<string | null>(null);
@@ -56,11 +67,31 @@ export default function TeacherAssignments() {
     Promise.all([
       fetch("/api/assignments").then((r) => r.json()),
       fetch("/api/classes").then((r) => r.json()),
-    ]).then(([a, c]) => {
+      fetch("/api/curriculum").then((r) => r.json()),
+    ]).then(([a, c, curriculum]) => {
       setAssignments(a);
       setClasses(c);
+      setCurriculumItems(Array.isArray(curriculum) ? curriculum : []);
     }).finally(() => setLoading(false));
   }, []);
+
+  // Deep-link support: /teacher/assignments?highlight=<id> opens that assignment's submissions
+  useEffect(() => {
+    if (!assignments.length) return;
+    const highlight = new URLSearchParams(window.location.search).get("highlight");
+    if (highlight && assignments.some((a) => a.id === highlight)) setViewId(highlight);
+  }, [assignments]);
+
+  function applyCurriculumItem(id: string) {
+    setSelectedCurriculumId(id);
+    const item = curriculumItems.find((c) => c.id === id);
+    if (!item) return;
+    setForm((f) => ({
+      ...f,
+      title: item.title,
+      description: item.content || item.description,
+    }));
+  }
 
   async function createAssignment(e: React.FormEvent) {
     e.preventDefault();
@@ -83,6 +114,7 @@ export default function TeacherAssignments() {
   function resetForm() {
     setForm({ title: "", description: "", classId: "", dueDate: "", maxPoints: "100", type: "written", isPublished: false, allowedFileTypes: [] });
     setCustomExtInput("");
+    setSelectedCurriculumId("");
   }
 
   async function togglePublish(id: string, current: boolean) {
@@ -220,6 +252,26 @@ export default function TeacherAssignments() {
               <button onClick={() => { setShowModal(false); resetForm(); }}><X className="w-5 h-5 text-gray-400" /></button>
             </div>
             <form onSubmit={createAssignment} className="space-y-4">
+              {curriculumItems.length > 0 && (
+                <div className="curriculum-picker bg-teal-50 border border-teal-200 rounded-xl p-3">
+                  <label className="curriculum-picker-label block text-sm font-medium text-teal-900 mb-2">
+                    نصاب سے شروع کریں (اختیاری)
+                  </label>
+                  <select
+                    className="input-urdu"
+                    value={selectedCurriculumId}
+                    onChange={(e) => applyCurriculumItem(e.target.value)}
+                  >
+                    <option value="">— خالی مشق بنائیں —</option>
+                    {curriculumItems.map((c) => (
+                      <option key={c.id} value={c.id}>سبق {c.order}: {c.title}</option>
+                    ))}
+                  </select>
+                  <p className="curriculum-picker-hint text-xs text-teal-700 mt-1.5">
+                    منتخب کرنے سے عنوان اور ہدایات خودکار طور پر بھر جائیں گی — آپ بعد میں تبدیل کر سکتے ہیں
+                  </p>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">عنوان *</label>
                 <input className="input-urdu" placeholder="مشق کا نام" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
@@ -251,7 +303,7 @@ export default function TeacherAssignments() {
                   <input type="datetime-local" className="input-urdu ltr-text" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">کل نمبر</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">کل پوائنٹس</label>
                   <input type="number" className="input-urdu ltr-text" value={form.maxPoints} onChange={(e) => setForm({ ...form, maxPoints: e.target.value })} min="1" max="1000" />
                 </div>
               </div>
@@ -349,7 +401,7 @@ export default function TeacherAssignments() {
               <h2 className="text-lg font-bold text-gray-900">{viewedAssignment.title}</h2>
               <button onClick={() => setViewId(null)}><X className="w-5 h-5 text-gray-400" /></button>
             </div>
-            <p className="text-sm text-gray-500 mb-5">{viewedAssignment.submissions.length} جمع شدہ · کل نمبر: {viewedAssignment.maxPoints}</p>
+            <p className="text-sm text-gray-500 mb-5">{viewedAssignment.submissions.length} جمع شدہ · کل پوائنٹس: {viewedAssignment.maxPoints}</p>
             {viewedAssignment.submissions.length === 0 ? (
               <p className="text-gray-500 text-center py-8">ابھی کوئی جمع نہیں کیا</p>
             ) : (
@@ -404,8 +456,11 @@ function SubmissionCard({ sub, maxPoints, assignmentType, onGrade }: { sub: SubT
       {sub.content && (
         assignmentType === "ide" || assignmentType === "code" ? (
           <div>
-            <p className="text-xs text-gray-400 mb-1 flex items-center gap-1"><Code2 className="w-3 h-3" />جمع کیا گیا کوڈ</p>
-            <pre className="font-mono text-xs bg-gray-900 text-green-300 rounded-lg p-3 max-h-48 overflow-y-auto whitespace-pre-wrap" dir="ltr">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs text-gray-400 flex items-center gap-1"><Code2 className="w-3 h-3" />جمع کیا گیا کوڈ</p>
+              <ViewInIdeButton code={sub.content} studentName={sub.student.name} />
+            </div>
+            <pre className="font-mono text-xs bg-gray-900 text-green-300 rounded-lg p-3 max-h-48 overflow-y-auto whitespace-pre-wrap text-center" dir="rtl">
               {sub.content}
             </pre>
           </div>
@@ -435,7 +490,7 @@ function SubmissionCard({ sub, maxPoints, assignmentType, onGrade }: { sub: SubT
             <input
               type="number" min="0" max={maxPoints}
               className="input-urdu w-24 ltr-text text-center"
-              placeholder="نمبر"
+              placeholder="پوائنٹس"
               value={grade}
               onChange={(e) => setGrade(e.target.value)}
             />
@@ -459,7 +514,7 @@ function SubmissionCard({ sub, maxPoints, assignmentType, onGrade }: { sub: SubT
       ) : (
         <button onClick={() => setEditing(true)} className="text-blue-600 text-sm hover:underline flex items-center gap-1">
           <Award className="w-3.5 h-3.5" />
-          {sub.grade !== null ? "نمبر تبدیل کریں" : "نمبر دیں"}
+          {sub.grade !== null ? "پوائنٹس تبدیل کریں" : "پوائنٹس دیں"}
         </button>
       )}
     </div>

@@ -21,6 +21,12 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        {/* Apply the stored theme before paint to avoid a light-mode flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem('nuqta_theme')==='dark'){document.documentElement.classList.add('dark')}}catch(e){}`,
+          }}
+        />
       </head>
       <body className="min-h-full">
         <Providers>{children}</Providers>

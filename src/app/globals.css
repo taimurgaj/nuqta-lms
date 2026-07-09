@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --font-urdu: 'Noto Nastaliq Urdu', 'Noto Naskh Arabic', serif;
@@ -25,6 +26,8 @@ body {
   background: #f8fafc;
   color: #1e293b;
 }
+
+.dark body { background: #0a0e1a; color: #e2e8f0; }
 
 .urdu-text {
   font-family: var(--font-urdu);
@@ -191,3 +194,95 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+/* ── Dark mode ─────────────────────────────────────────────────────────────
+   edtech was built entirely light-themed with a mix of shared classes above
+   (.card, .btn-*, .input-urdu, .badge-*, .nav-item, .table-urdu, .stat-card)
+   and raw Tailwind utility classes inline per-page. Retrofitting real dark:
+   variants onto every element across ~30 pages isn't practical in one pass,
+   so this overrides the shared classes directly (covers most of the surface
+   area since they're reused everywhere) plus the most common repeated raw
+   utility classes as a broad safety net. Matches the dark palette already
+   used by landing/learn/ide/keyboard (gray-950/900/800 backgrounds, blue
+   accents) so edtech doesn't look like a different product once toggled. */
+
+.dark .card,
+.dark .stat-card {
+  background: #111827;
+  border-color: #1f2937;
+}
+.dark .btn-primary { background: #2563eb; }
+.dark .btn-primary:hover { background: #1d4ed8; }
+.dark .btn-secondary {
+  background: #1f2937;
+  color: #cbd5e1;
+  border-color: #374151;
+}
+.dark .input-urdu {
+  background: #111827;
+  border-color: #374151;
+  color: #e2e8f0;
+}
+.dark .badge-green { background: #064e3b; color: #6ee7b7; }
+.dark .badge-yellow { background: #78350f; color: #fcd34d; }
+.dark .badge-red { background: #7f1d1d; color: #fca5a5; }
+.dark .badge-blue { background: #1e3a8a; color: #93c5fd; }
+.dark .badge-gray { background: #1f2937; color: #cbd5e1; }
+.dark .nav-item { color: #94a3b8; }
+.dark .nav-item:hover,
+.dark .nav-item.active { background: #1e3a8a; color: #93c5fd; }
+.dark .table-urdu th {
+  background: #111827;
+  color: #cbd5e1;
+  border-bottom-color: #374151;
+}
+.dark .table-urdu td { border-bottom-color: #1f2937; }
+.dark .table-urdu tr:hover td { background: #111827; }
+.dark .chat-bubble-ai {
+  background: #111827;
+  color: #e2e8f0;
+  border-color: #374151;
+}
+
+/* Broad safety net for raw Tailwind utility classes used inline per-page */
+.dark .bg-white { background-color: #111827 !important; }
+.dark .bg-gray-50 { background-color: #0a0e1a !important; }
+.dark .bg-gray-100 { background-color: #1f2937 !important; }
+.dark .bg-blue-50 { background-color: #1e3a8a !important; }
+.dark .bg-blue-100 { background-color: #1e3a8a !important; }
+.dark .bg-gradient-to-br.from-blue-50 { --tw-gradient-from: #0a0e1a !important; }
+.dark .bg-gradient-to-br.via-white { --tw-gradient-via: #0a0e1a !important; }
+.dark .bg-gradient-to-br.to-green-50 { --tw-gradient-to: #0a0e1a !important; }
+
+.dark .text-gray-900 { color: #f1f5f9 !important; }
+.dark .text-gray-800 { color: #e2e8f0 !important; }
+.dark .text-gray-700 { color: #cbd5e1 !important; }
+.dark .text-gray-600 { color: #94a3b8 !important; }
+.dark .text-gray-500 { color: #94a3b8 !important; }
+.dark .text-gray-400 { color: #64748b !important; }
+.dark .text-blue-900 { color: #93c5fd !important; }
+.dark .text-blue-800 { color: #93c5fd !important; }
+.dark .text-blue-700 { color: #60a5fa !important; }
+
+.dark .border-blue-100,
+.dark .border-gray-100,
+.dark .border-gray-200 { border-color: #1f2937 !important; }
+
+/* hover: variants compile to their own selector (.hover\:bg-gray-50:hover) and
+   aren't touched by the plain .bg-gray-50 override above — without this, a
+   hovered row keeps its light background while the safety net above still
+   lightens its text, producing unreadable near-white-on-white rows. */
+.dark .hover\:bg-gray-50:hover,
+.dark .hover\:bg-gray-100:hover { background-color: #1f2937 !important; }
+
+/* Scoped (not the broad bg-teal-*/text-teal-* safety net, which would also
+   repaint the unrelated teal icon on the curriculum page) fix for the
+   "start from curriculum" picker in the new-assignment modal — it kept its
+   light mint background and dark text in dark mode, unreadable against the
+   dark <select> it wraps. */
+.dark .curriculum-picker {
+  background: #0f2e2b;
+  border-color: #134e4a;
+}
+.dark .curriculum-picker-label { color: #5eead4; }
+.dark .curriculum-picker-hint { color: #2dd4bf; }

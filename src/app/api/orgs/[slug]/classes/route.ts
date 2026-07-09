@@ -41,7 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   const org = await prisma.organization.findUnique({ where: { slug } });
   if (!org) return NextResponse.json({ error: "ادارہ نہیں ملا" }, { status: 404 });
 
-  const { name, description, subject, gradeLevel, teacherId, subAccountId } = await req.json();
+  const { name, description, subject, gradeLevel, teacherId } = await req.json();
   if (!name || !gradeLevel || !teacherId)
     return NextResponse.json({ error: "نام، جماعت اور استاد ضروری ہیں" }, { status: 400 });
 
@@ -55,7 +55,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
       teacherId,
       orgId: org.id,
       code,
-      subAccountId: subAccountId || null,
     },
     include: {
       teacher: { select: { id: true, name: true } },

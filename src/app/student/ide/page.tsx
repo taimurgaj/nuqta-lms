@@ -16,12 +16,12 @@ export default function IDEPage() {
           ڈیش بورڈ
         </Link>
         <span className="text-gray-700 text-xs">|</span>
-        <span className="text-blue-400 text-xs font-semibold">اردو کوڈ گاہ</span>
+        <span className="text-blue-400 text-xs font-semibold">اردو اڈا</span>
       </div>
       <iframe
         src="https://ide.nuqta.dev"
         className="flex-1 w-full border-0"
-        title="اردو کوڈ گاہ"
+        title="اردو اڈا"
         allow="clipboard-read; clipboard-write"
       />
     </div>

@@ -17,7 +17,7 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
-          include: { org: { select: { name: true, slug: true } } },
+          include: { org: { select: { name: true, slug: true, tier: true } } },
         });
 
         if (!user) return null;
@@ -34,6 +34,7 @@ export const authOptions: NextAuthOptions = {
           isOrgAdmin: user.isOrgAdmin,
           orgName: user.org?.name ?? null,
           orgSlug: user.org?.slug ?? null,
+          orgTier: user.org?.tier ?? "pilot",
         };
       },
     }),
@@ -45,7 +46,7 @@ export const authOptions: NextAuthOptions = {
         const u = user as {
           role?: string; id?: string;
           orgId?: string | null; isOrgAdmin?: boolean;
-          orgName?: string | null; orgSlug?: string | null;
+          orgName?: string | null; orgSlug?: string | null; orgTier?: string;
         };
         token.role = u.role;
         token.id = u.id;
@@ -53,6 +54,7 @@ export const authOptions: NextAuthOptions = {
         token.isOrgAdmin = u.isOrgAdmin ?? false;
         token.orgName = u.orgName ?? null;
         token.orgSlug = u.orgSlug ?? null;
+        token.orgTier = u.orgTier ?? "pilot";
       }
       return token;
     },
@@ -65,6 +67,7 @@ export const authOptions: NextAuthOptions = {
         u.isOrgAdmin = token.isOrgAdmin ?? false;
         u.orgName = token.orgName ?? null;
         u.orgSlug = token.orgSlug ?? null;
+        u.orgTier = token.orgTier ?? "pilot";
       }
       return session;
     },

@@ -59,7 +59,7 @@ export default function TeacherDashboard() {
         { label: "کل اسباق", value: analytics.totalClasses, icon: <BookOpen className="w-5 h-5" />, color: "bg-blue-100 text-blue-700" },
         { label: "کل طلبہ", value: analytics.totalStudents, icon: <Users className="w-5 h-5" />, color: "bg-green-100 text-green-700" },
         { label: "کل مشقیں", value: analytics.totalAssignments, icon: <ClipboardList className="w-5 h-5" />, color: "bg-orange-100 text-orange-700" },
-        { label: "اوسط نمبر", value: `${analytics.avgGrade}%`, icon: <TrendingUp className="w-5 h-5" />, color: "bg-purple-100 text-purple-700" },
+        { label: "اوسط پوائنٹس", value: `${analytics.avgGrade}%`, icon: <TrendingUp className="w-5 h-5" />, color: "bg-purple-100 text-purple-700" },
       ]
     : [];
 

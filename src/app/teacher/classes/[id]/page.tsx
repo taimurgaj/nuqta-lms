@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Users, Mail, Check, X, Star, Clock, FileText } from "lucide-react";
+import { ViewInIdeButton } from "@/components/ViewInIdeButton";
+import { Users, Mail, Check, X, Star, Clock, FileText, Brain } from "lucide-react";
 
 interface Student {
   id: string;
@@ -33,6 +35,7 @@ interface ClassDetail {
   assignments: Array<{
     id: string;
     title: string;
+    type: string;
     dueDate: string | null;
     maxPoints: number;
     submissions: Submission[];
@@ -44,6 +47,7 @@ export default function ClassDetailPage() {
   const [cls, setCls] = useState<ClassDetail | null>(null);
   const [tab, setTab] = useState<"roster" | "assignments" | "grades">("roster");
   const [loading, setLoading] = useState(true);
+  const [aiHistoryStudent, setAiHistoryStudent] = useState<Student | null>(null);
 
   useEffect(() => {
     fetch(`/api/classes/${id}`)
@@ -114,6 +118,7 @@ export default function ClassDetailPage() {
                   <th>برقی خط</th>
                   <th>شمولیت کی تاریخ</th>
                   <th>اسائنمنٹ مکمل</th>
+                  <th>ذہین معلم</th>
                 </tr>
               </thead>
               <tbody>
@@ -136,6 +141,15 @@ export default function ClassDetailPage() {
                       <td className="text-gray-500 text-sm">{new Date(e.joinedAt).toLocaleDateString("ur-PK")}</td>
                       <td>
                         <span className="badge badge-green">{studentSubmissions.length}/{cls.assignments.length}</span>
+                      </td>
+                      <td>
+                        <button
+                          onClick={() => setAiHistoryStudent(e.student)}
+                          className="inline-flex items-center gap-1 text-sm text-purple-700 hover:underline"
+                        >
+                          <Brain className="w-3.5 h-3.5" />
+                          تاریخ دیکھیں
+                        </button>
                       </td>
                     </tr>
                   );
@@ -176,13 +190,13 @@ export default function ClassDetailPage() {
                         <tr>
                           <th>طالب علم</th>
                           <th>صورتحال</th>
-                          <th>نمبر</th>
+                          <th>پوائنٹس</th>
                           <th>عمل</th>
                         </tr>
                       </thead>
                       <tbody>
                         {a.submissions.map((s) => (
-                          <GradeRow key={s.id} submission={s} maxPoints={s.assignment?.maxPoints || 100} onGrade={(grade, feedback) => gradeSubmission(s.id, a.id, grade, feedback)} />
+                          <GradeRow key={s.id} submission={s} maxPoints={s.assignment?.maxPoints || 100} assignmentType={a.type} onGrade={(grade, feedback) => gradeSubmission(s.id, a.id, grade, feedback)} />
                         ))}
                       </tbody>
                     </table>
@@ -206,7 +220,11 @@ export default function ClassDetailPage() {
                 <tr>
                   <th>طالب علم</th>
                   {cls.assignments.map((a) => (
-                    <th key={a.id} className="max-w-24 truncate">{a.title}</th>
+                    <th key={a.id} className="max-w-24 truncate">
+                      <Link href={`/teacher/assignments?highlight=${a.id}`} className="hover:text-blue-600 hover:underline" title={a.title}>
+                        {a.title}
+                      </Link>
+                    </th>
                   ))}
                   <th>اوسط</th>
                 </tr>
@@ -243,11 +261,62 @@ export default function ClassDetailPage() {
           </div>
         </div>
       )}
+
+      {aiHistoryStudent && (
+        <AIHistoryModal student={aiHistoryStudent} onClose={() => setAiHistoryStudent(null)} />
+      )}
     </DashboardLayout>
   );
 }
 
-function GradeRow({ submission, maxPoints, onGrade }: { submission: Submission; maxPoints: number; onGrade: (g: number, f: string) => void }) {
+interface AIMessageRow {
+  id: string;
+  role: string;
+  content: string;
+  createdAt: string;
+}
+
+function AIHistoryModal({ student, onClose }: { student: Student; onClose: () => void }) {
+  const [messages, setMessages] = useState<AIMessageRow[] | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch(`/api/students/${student.id}/ai-history`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setMessages(data);
+        else setError(data.error || "کچھ غلط ہوا");
+      });
+  }, [student.id]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" dir="rtl">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+          <h3 className="font-bold text-gray-900">{student.name} — ذہین معلم کی تاریخ</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5 space-y-3">
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+          {!error && messages === null && (
+            <div className="flex items-center justify-center h-24">
+              <div className="w-6 h-6 border-4 border-blue-200 border-t-blue-700 rounded-full animate-spin" />
+            </div>
+          )}
+          {messages?.length === 0 && <p className="text-gray-500 text-sm text-center py-8">اس طالب علم نے ابھی تک ذہین معلم سے بات نہیں کی</p>}
+          {messages?.map((m) => (
+            <div key={m.id} className={m.role === "user" ? "chat-bubble-user" : "chat-bubble-ai"}>
+              <p className="text-sm whitespace-pre-wrap">{m.content}</p>
+              <p className="text-xs opacity-60 mt-1">{new Date(m.createdAt).toLocaleString("ur-PK")}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GradeRow({ submission, maxPoints, assignmentType, onGrade }: { submission: Submission; maxPoints: number; assignmentType: string; onGrade: (g: number, f: string) => void }) {
   const [editing, setEditing] = useState(false);
   const [grade, setGrade] = useState(submission.grade?.toString() || "");
   const [feedback, setFeedback] = useState(submission.feedback || "");
@@ -281,7 +350,7 @@ function GradeRow({ submission, maxPoints, onGrade }: { submission: Submission; 
           ) : (
             <button onClick={() => setEditing(true)} className="text-blue-600 text-sm hover:underline flex items-center gap-1">
               <Star className="w-3.5 h-3.5" />
-              {submission.grade !== null ? "تبدیل کریں" : "نمبر دیں"}
+              {submission.grade !== null ? "تبدیل کریں" : "پوائنٹس دیں"}
             </button>
           )}
         </td>
@@ -290,7 +359,13 @@ function GradeRow({ submission, maxPoints, onGrade }: { submission: Submission; 
       {(submission.content || submission.fileUrl) && (
         <tr className="bg-gray-50">
           <td colSpan={4} className="px-4 py-2">
-            {submission.content && (
+            {submission.content && (assignmentType === "ide" || assignmentType === "code") && (
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <p className="text-xs text-gray-600 whitespace-pre-wrap max-h-20 overflow-y-auto flex-1" dir="ltr">{submission.content}</p>
+                <ViewInIdeButton code={submission.content} studentName={submission.student.name} />
+              </div>
+            )}
+            {submission.content && assignmentType !== "ide" && assignmentType !== "code" && (
               <p className="text-xs text-gray-600 whitespace-pre-wrap max-h-20 overflow-y-auto" dir="auto">{submission.content}</p>
             )}
             {submission.fileUrl && (

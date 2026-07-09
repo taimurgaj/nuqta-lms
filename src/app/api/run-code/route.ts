@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (language !== "urdu") {
-    return NextResponse.json({ output: "اردو زبان کے علاوہ کوڈ چلانے کے لیے ادا استعمال کریں" });
+    return NextResponse.json({ output: "اردو زبان کے علاوہ کوڈ چلانے کے لیے اڈا استعمال کریں" });
   }
 
   const inputs = stdin.trim() ? stdin.split("\n") : [];

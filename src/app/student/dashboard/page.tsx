@@ -68,7 +68,7 @@ export default function StudentDashboard() {
 
   return (
     <DashboardLayout
-      title={`السلام علیکم، ${session?.user?.name?.split(" ")[0] || "طالب علم"}!`}
+      title={`سلام، ${session?.user?.name?.split(" ")[0] || "طالب علم"}!`}
       subtitle="آپ کی تعلیمی پیشرفت کا جائزہ"
       actions={
         <button onClick={() => setShowJoinModal(true)} className="btn-primary text-sm">

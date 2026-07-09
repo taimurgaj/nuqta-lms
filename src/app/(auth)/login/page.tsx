@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { BookOpen, Eye, EyeOff, Search, MapPin, Building2, X, ArrowLeft } from "lucide-react";
+import { BookOpen, Eye, EyeOff, Search, MapPin, Building2, X } from "lucide-react";
 
 interface OrgResult {
   id: string;
@@ -170,18 +170,6 @@ export default function LoginPage() {
                 )}
               </div>
 
-              <div className="mt-6 pt-5 border-t border-gray-100 text-center space-y-2">
-                <Link
-                  href="/library"
-                  className="text-sm text-blue-600 hover:text-blue-800 flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  بغیر ادارے کے عالمی کتب خانہ دیکھیں
-                </Link>
-                <p className="text-xs text-gray-400">
-                  (بغیر ادارے کے صرف کتب خانہ دستیاب ہے)
-                </p>
-              </div>
             </div>
           ) : (
             <div>

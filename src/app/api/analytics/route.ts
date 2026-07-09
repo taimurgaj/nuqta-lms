@@ -47,6 +47,7 @@ export async function GET() {
     .map((s) => ({
       student: s.student.name,
       assignment: s.assignment.title,
+      assignmentId: s.assignmentId,
       grade: s.grade,
       status: s.status,
       date: s.submittedAt,

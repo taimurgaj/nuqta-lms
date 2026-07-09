@@ -4,33 +4,18 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
-  Building2, Users, Copy, Check, Plus, Trash2, X,
-  ShieldCheck, GraduationCap, BookOpen, Layers, ChevronDown, ChevronUp,
-  UserCheck, ChevronLeft, KeyRound,
+  Building2, Users, Copy, Check, Plus, X,
+  ShieldCheck, GraduationCap, BookOpen, ChevronDown, ChevronUp,
+  UserCheck, KeyRound,
 } from "lucide-react";
 
-interface SubAccount {
-  id: string; name: string; type: string; createdAt: string;
-  children?: SubAccount[];
-}
-interface OrgSubject { id: string; name: string }
 interface Member { id: string; name: string; email: string; role: string; isOrgAdmin: boolean; createdAt: string }
 interface OrgClass {
   id: string; name: string; subject: string | null; gradeLevel: string; code: string;
   teacher: { id: string; name: string };
   enrollments: Array<{ student: { id: string; name: string; email: string } }>;
-  jamaatId: string | null;
-}
-interface Jamaat {
-  id: string; name: string;
-  classes: Array<{ id: string; name: string; gradeLevel: string; subject: string | null; teacher: { id: string; name: string } }>;
 }
 interface OrgInfo { id: string; name: string; slug: string; city: string | null; joinCode: string; createdAt: string }
-
-const TYPE_LABELS: Record<string, string> = { division: "تقسیم", department: "شعبہ" };
-const TYPE_COLORS: Record<string, string> = {
-  division: "bg-blue-100 text-blue-700", department: "bg-purple-100 text-purple-700",
-};
 
 const GRADES = ["تمام جماعتیں", "پہلی", "دوسری", "تیسری", "چوتھی", "پانچویں", "چھٹی", "ساتویں", "آٹھویں", "نہم", "دہم", "یازدہم", "دوازدہم", "دیگر"];
 
@@ -39,41 +24,20 @@ export default function OrgAdminPage() {
   const u = session?.user as { isOrgAdmin?: boolean; orgSlug?: string; orgName?: string } | undefined;
 
   const [org, setOrg] = useState<OrgInfo | null>(null);
-  const [subAccounts, setSubAccounts] = useState<SubAccount[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
-  const [subjects, setSubjects] = useState<OrgSubject[]>([]);
   const [classes, setClasses] = useState<OrgClass[]>([]);
-  const [jamaats, setJamaats] = useState<Jamaat[]>([]);
-  const [tab, setTab] = useState<"overview" | "units" | "subjects" | "classes" | "members" | "jamaats">("overview");
+  const [tab, setTab] = useState<"overview" | "classes" | "members">("overview");
 
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
 
-  // Units tree
-  const [addingDiv, setAddingDiv] = useState(false);
-  const [newDivName, setNewDivName] = useState("");
-  const [addingDeptForDiv, setAddingDeptForDiv] = useState<string | null>(null);
-  const [newDeptName, setNewDeptName] = useState("");
-  const [savingUnit, setSavingUnit] = useState(false);
-
-  // Subjects
-  const [newSubject, setNewSubject] = useState("");
-  const [savingSubject, setSavingSubject] = useState(false);
-
-  // اسباق
+  // Classes
   const [showAddClass, setShowAddClass] = useState(false);
-  const [classForm, setClassForm] = useState({ name: "", description: "", gradeLevel: "", teacherId: "", divisionId: "", subAccountId: "" });
+  const [classForm, setClassForm] = useState({ name: "", description: "", gradeLevel: "", teacherId: "" });
   const [savingClass, setSavingClass] = useState(false);
   const [expandedClass, setExpandedClass] = useState<string | null>(null);
   const [enrollPickerId, setEnrollPickerId] = useState<string | null>(null);
   const [enrollUserId, setEnrollUserId] = useState("");
-
-  // جماعتیں
-  const [showAddJamaat, setShowAddJamaat] = useState(false);
-  const [newJamaatName, setNewJamaatName] = useState("");
-  const [savingJamaat, setSavingJamaat] = useState(false);
-  const [assigningToJamaat, setAssigningToJamaat] = useState<string | null>(null);
-  const [assignClassId, setAssignClassId] = useState("");
 
   // Members
   const [loadingMembers, setLoadingMembers] = useState(false);
@@ -87,12 +51,9 @@ export default function OrgAdminPage() {
   useEffect(() => {
     if (!orgSlug) return;
     fetch(`/api/orgs/${orgSlug}`).then((r) => r.json()).then(setOrg).catch(() => {});
-    fetch(`/api/orgs/${orgSlug}/subaccounts`).then((r) => r.json()).then(setSubAccounts).catch(() => {});
     setLoadingMembers(true);
     fetch(`/api/orgs/${orgSlug}/members`).then((r) => r.json()).then(setMembers).catch(() => {}).finally(() => setLoadingMembers(false));
-    fetch(`/api/orgs/${orgSlug}/subjects`).then((r) => r.json()).then((d) => Array.isArray(d) && setSubjects(d)).catch(() => {});
     fetch(`/api/orgs/${orgSlug}/classes`).then((r) => r.json()).then((d) => Array.isArray(d) && setClasses(d)).catch(() => {});
-    fetch(`/api/orgs/${orgSlug}/jamaats`).then((r) => r.json()).then((d) => Array.isArray(d) && setJamaats(d)).catch(() => {});
   }, [orgSlug]);
 
   if (!u?.isOrgAdmin) {
@@ -112,73 +73,16 @@ export default function OrgAdminPage() {
     else { setCopiedUrl(true); setTimeout(() => setCopiedUrl(false), 2000); }
   }
 
-  // ── Units ──
-  async function addDivision(e: React.FormEvent) {
-    e.preventDefault(); setSavingUnit(true);
-    const res = await fetch(`/api/orgs/${orgSlug}/subaccounts`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newDivName, type: "division" }),
-    });
-    if (res.ok) { const nu = await res.json(); setSubAccounts((p) => [...p, { ...nu, children: [] }]); setNewDivName(""); setAddingDiv(false); }
-    setSavingUnit(false);
-  }
-
-  async function addDepartment(e: React.FormEvent, divId: string) {
-    e.preventDefault(); setSavingUnit(true);
-    const res = await fetch(`/api/orgs/${orgSlug}/subaccounts`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newDeptName, type: "department", parentId: divId }),
-    });
-    if (res.ok) {
-      const nu = await res.json();
-      setSubAccounts((p) => p.map((div) => div.id === divId ? { ...div, children: [...(div.children || []), nu] } : div));
-      setNewDeptName(""); setAddingDeptForDiv(null);
-    }
-    setSavingUnit(false);
-  }
-
-  async function deleteUnit(id: string, parentId?: string) {
-    if (!confirm("کیا آپ اس اکائی کو حذف کرنا چاہتے ہیں؟")) return;
-    const res = await fetch(`/api/orgs/${orgSlug}/subaccounts`, {
-      method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }),
-    });
-    if (res.ok) {
-      if (parentId) {
-        setSubAccounts((p) => p.map((div) => div.id === parentId ? { ...div, children: (div.children || []).filter((c) => c.id !== id) } : div));
-      } else {
-        setSubAccounts((p) => p.filter((s) => s.id !== id));
-      }
-    }
-  }
-
-  // ── Subjects ──
-  async function addSubject(e: React.FormEvent) {
-    e.preventDefault(); if (!newSubject.trim()) return; setSavingSubject(true);
-    const res = await fetch(`/api/orgs/${orgSlug}/subjects`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newSubject }),
-    });
-    if (res.ok) { const ns = await res.json(); setSubjects((p) => [...p, ns]); setNewSubject(""); }
-    setSavingSubject(false);
-  }
-
-  async function deleteSubject(id: string) {
-    const res = await fetch(`/api/orgs/${orgSlug}/subjects`, {
-      method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }),
-    });
-    if (res.ok) setSubjects((p) => p.filter((s) => s.id !== id));
-  }
-
-  // ── اسباق ──
+  // ── Classes ──
   async function addClass(e: React.FormEvent) {
     e.preventDefault(); setSavingClass(true);
-    const { divisionId: _, ...payload } = classForm;
     const res = await fetch(`/api/orgs/${orgSlug}/classes`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(classForm),
     });
     if (res.ok) {
       const nc = await res.json();
       setClasses((p) => [nc, ...p]);
-      setClassForm({ name: "", description: "", gradeLevel: "", teacherId: "", divisionId: "", subAccountId: "" });
+      setClassForm({ name: "", description: "", gradeLevel: "", teacherId: "" });
       setShowAddClass(false);
     }
     setSavingClass(false);
@@ -202,50 +106,6 @@ export default function OrgAdminPage() {
     });
     if (res.ok) {
       setClasses((prev) => prev.map((c) => c.id === classId ? { ...c, enrollments: c.enrollments.filter((e) => e.student.id !== userId) } : c));
-    }
-  }
-
-  // ── جماعتیں ──
-  async function addJamaat(e: React.FormEvent) {
-    e.preventDefault(); setSavingJamaat(true);
-    const res = await fetch(`/api/orgs/${orgSlug}/jamaats`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newJamaatName }),
-    });
-    if (res.ok) { const nj = await res.json(); setJamaats((p) => [...p, nj]); setNewJamaatName(""); setShowAddJamaat(false); }
-    setSavingJamaat(false);
-  }
-
-  async function deleteJamaat(id: string) {
-    if (!confirm("کیا آپ اس جماعت کو حذف کرنا چاہتے ہیں؟")) return;
-    const res = await fetch(`/api/orgs/${orgSlug}/jamaats`, {
-      method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }),
-    });
-    if (res.ok) {
-      setJamaats((p) => p.filter((j) => j.id !== id));
-      setClasses((p) => p.map((c) => c.jamaatId === id ? { ...c, jamaatId: null } : c));
-    }
-  }
-
-  async function assignClass(jamaatId: string) {
-    if (!assignClassId) return;
-    const res = await fetch(`/api/orgs/${orgSlug}/jamaats`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ classId: assignClassId, jamaatId }),
-    });
-    if (res.ok) {
-      const updated = await res.json();
-      setClasses((p) => p.map((c) => c.id === assignClassId ? { ...c, jamaatId } : c));
-      setJamaats((p) => p.map((j) => j.id === jamaatId ? { ...j, classes: [...j.classes, { id: updated.id, name: updated.name, gradeLevel: updated.gradeLevel, subject: updated.subject, teacher: updated.teacher }] } : j));
-      setAssigningToJamaat(null); setAssignClassId("");
-    }
-  }
-
-  async function removeClassFromJamaat(classId: string, jamaatId: string) {
-    const res = await fetch(`/api/orgs/${orgSlug}/jamaats`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ classId, jamaatId: null }),
-    });
-    if (res.ok) {
-      setClasses((p) => p.map((c) => c.id === classId ? { ...c, jamaatId: null } : c));
-      setJamaats((p) => p.map((j) => j.id === jamaatId ? { ...j, classes: j.classes.filter((c) => c.id !== classId) } : j));
     }
   }
 
@@ -285,20 +145,9 @@ export default function OrgAdminPage() {
   const teachers = members.filter((m) => m.role === "teacher" || m.isOrgAdmin);
   const students = members.filter((m) => m.role === "student");
 
-  // Departments filtered by selected division (for cascading dropdown)
-  const filteredDepts = classForm.divisionId
-    ? (subAccounts.find((d) => d.id === classForm.divisionId)?.children || [])
-    : [];
-
-  // Classes not yet in any jamaat (available to assign)
-  const unassignedClasses = (jamaatId: string) => classes.filter((c) => !c.jamaatId || c.jamaatId === jamaatId);
-
   const TABS = [
     { key: "overview", label: "جائزہ" },
-    { key: "classes", label: "اسباق" },
-    { key: "jamaats", label: "جماعتیں" },
-    { key: "subjects", label: "مضامین" },
-    { key: "units", label: "اکائیاں" },
+    { key: "classes", label: "کلاسز" },
     { key: "members", label: "اراکین" },
   ] as const;
 
@@ -331,7 +180,7 @@ export default function OrgAdminPage() {
             <div className="card p-4 text-center">
               <BookOpen className="w-6 h-6 mx-auto text-purple-600 mb-1" />
               <p className="text-2xl font-bold text-gray-900">{classes.length}</p>
-              <p className="text-xs text-gray-500">اسباق</p>
+              <p className="text-xs text-gray-500">کلاسز</p>
             </div>
           </div>
 
@@ -368,24 +217,24 @@ export default function OrgAdminPage() {
         </div>
       )}
 
-      {/* ── اسباق ── */}
+      {/* ── کلاسز ── */}
       {tab === "classes" && (
         <div className="space-y-4 max-w-3xl">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">{classes.length} اسباق</p>
+            <p className="text-sm text-gray-500">{classes.length} کلاسز</p>
             <button onClick={() => setShowAddClass(true)} className="btn-primary text-sm">
-              <Plus className="w-4 h-4" /> نیا سبق
+              <Plus className="w-4 h-4" /> نئی کلاس
             </button>
           </div>
 
           {showAddClass && (
             <div className="card p-5 border-2 border-blue-200">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-gray-900 text-sm">نیا سبق بنائیں</h3>
+                <h3 className="font-bold text-gray-900 text-sm">نئی کلاس بنائیں</h3>
                 <button onClick={() => setShowAddClass(false)}><X className="w-4 h-4 text-gray-400" /></button>
               </div>
               <form onSubmit={addClass} className="space-y-3">
-                <input className="input-urdu" placeholder="سبق کا نام *" value={classForm.name}
+                <input className="input-urdu" placeholder="کلاس کا نام *" value={classForm.name}
                   onChange={(e) => setClassForm({ ...classForm, name: e.target.value })} required />
 
                 <div className="grid grid-cols-2 gap-3">
@@ -401,26 +250,12 @@ export default function OrgAdminPage() {
                   </select>
                 </div>
 
-                <select className="input-urdu" value={classForm.divisionId}
-                  onChange={(e) => setClassForm({ ...classForm, divisionId: e.target.value, subAccountId: "" })} required>
-                  <option value="">تقسیم منتخب کریں *</option>
-                  {subAccounts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-
-                {classForm.divisionId && (
-                  <select className="input-urdu" value={classForm.subAccountId}
-                    onChange={(e) => setClassForm({ ...classForm, subAccountId: e.target.value })} required>
-                    <option value="">شعبہ منتخب کریں *</option>
-                    {filteredDepts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                  </select>
-                )}
-
                 <textarea className="input-urdu" rows={2} placeholder="تفصیل (اختیاری)"
                   value={classForm.description} onChange={(e) => setClassForm({ ...classForm, description: e.target.value })} />
 
                 <div className="flex gap-3">
                   <button type="submit" disabled={savingClass} className="btn-primary text-sm">
-                    {savingClass ? "بن رہا ہے..." : "سبق بنائیں"}
+                    {savingClass ? "بن رہی ہے..." : "کلاس بنائیں"}
                   </button>
                   <button type="button" onClick={() => setShowAddClass(false)} className="btn-secondary text-sm">منسوخ</button>
                 </div>
@@ -428,16 +263,10 @@ export default function OrgAdminPage() {
             </div>
           )}
 
-          {subAccounts.length === 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 text-sm text-yellow-700">
-              سبق بنانے سے پہلے "اکائیاں" ٹیب میں تقسیم اور شعبہ بنائیں
-            </div>
-          )}
-
           {classes.length === 0 ? (
             <div className="text-center py-14">
               <BookOpen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-gray-500 text-sm">ابھی تک کوئی سبق نہیں بنایا</p>
+              <p className="text-gray-500 text-sm">ابھی تک کوئی کلاس نہیں بنائی</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -497,200 +326,6 @@ export default function OrgAdminPage() {
                         </div>
                       )}
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── جماعتیں ── */}
-      {tab === "jamaats" && (
-        <div className="space-y-4 max-w-2xl">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">ہر جماعت اسباق کا مجموعہ ہے</p>
-            <button onClick={() => setShowAddJamaat(true)} className="btn-primary text-sm">
-              <Plus className="w-4 h-4" /> نئی جماعت
-            </button>
-          </div>
-
-          {showAddJamaat && (
-            <div className="card p-4 border-2 border-blue-200">
-              <h3 className="font-bold text-gray-900 text-sm mb-3">نئی جماعت بنائیں</h3>
-              <form onSubmit={addJamaat} className="flex gap-3">
-                <input className="input-urdu flex-1" placeholder="جیسے: نہم الف، دہم ب" value={newJamaatName}
-                  onChange={(e) => setNewJamaatName(e.target.value)} required autoFocus />
-                <button type="submit" disabled={savingJamaat} className="btn-primary text-sm px-4">{savingJamaat ? "..." : "بنائیں"}</button>
-                <button type="button" onClick={() => { setShowAddJamaat(false); setNewJamaatName(""); }} className="btn-secondary text-sm px-3">منسوخ</button>
-              </form>
-            </div>
-          )}
-
-          {jamaats.length === 0 ? (
-            <div className="text-center py-14">
-              <GraduationCap className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-gray-500 text-sm">ابھی تک کوئی جماعت نہیں بنائی</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {jamaats.map((j) => (
-                <div key={j.id} className="card overflow-hidden">
-                  <div className="flex items-center gap-3 px-4 py-3 bg-green-50">
-                    <GraduationCap className="w-4 h-4 text-green-700 flex-shrink-0" />
-                    <span className="flex-1 font-semibold text-gray-900">{j.name}</span>
-                    <span className="text-xs text-gray-500">{j.classes.length} اسباق</span>
-                    <button onClick={() => { setAssigningToJamaat(j.id); setAssignClassId(""); }}
-                      className="text-xs text-green-700 hover:text-green-800 font-medium flex items-center gap-1">
-                      <Plus className="w-3 h-3" /> سبق
-                    </button>
-                    <button onClick={() => deleteJamaat(j.id)} className="text-gray-300 hover:text-red-500 transition-colors">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  {assigningToJamaat === j.id && (
-                    <div className="px-4 py-3 bg-green-50 border-t border-green-100">
-                      <div className="flex gap-2">
-                        <select className="input-urdu flex-1 text-sm" value={assignClassId} onChange={(e) => setAssignClassId(e.target.value)}>
-                          <option value="">سبق منتخب کریں</option>
-                          {classes.filter((c) => !c.jamaatId).map((c) => (
-                            <option key={c.id} value={c.id}>{c.name} — جماعت {c.gradeLevel}</option>
-                          ))}
-                        </select>
-                        <button onClick={() => assignClass(j.id)} className="btn-primary text-xs px-3">شامل</button>
-                        <button onClick={() => setAssigningToJamaat(null)} className="btn-secondary text-xs px-2">منسوخ</button>
-                      </div>
-                    </div>
-                  )}
-
-                  {j.classes.length === 0 ? (
-                    <p className="text-xs text-gray-400 text-center py-3">ابھی کوئی سبق نہیں — اوپر "+ سبق" دبائیں</p>
-                  ) : (
-                    <div className="divide-y divide-gray-50">
-                      {j.classes.map((c) => (
-                        <div key={c.id} className="flex items-center gap-3 px-4 py-2.5 pr-8 hover:bg-gray-50">
-                          <ChevronLeft className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
-                          <BookOpen className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-                          <span className="flex-1 text-sm text-gray-800">{c.name}</span>
-                          <span className="text-xs text-gray-400">جماعت {c.gradeLevel}</span>
-                          <span className="text-xs text-gray-400">{c.teacher.name}</span>
-                          <button onClick={() => removeClassFromJamaat(c.id, j.id)} className="text-gray-300 hover:text-red-500 transition-colors">
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── مضامین ── */}
-      {tab === "subjects" && (
-        <div className="space-y-4 max-w-lg">
-          <p className="text-sm text-gray-500">ادارے کے مضامین — سبق بناتے وقت حوالے کے لیے</p>
-          <form onSubmit={addSubject} className="flex gap-3">
-            <input className="input-urdu flex-1" placeholder="نیا مضمون — جیسے: اردو، ریاضی، سائنس"
-              value={newSubject} onChange={(e) => setNewSubject(e.target.value)} required />
-            <button type="submit" disabled={savingSubject} className="btn-primary text-sm px-4">
-              {savingSubject ? "..." : "شامل کریں"}
-            </button>
-          </form>
-          {subjects.length === 0 ? (
-            <div className="text-center py-14">
-              <BookOpen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-gray-500 text-sm">ابھی تک کوئی مضمون نہیں شامل کیا</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {subjects.map((s) => (
-                <div key={s.id} className="card px-4 py-3 flex items-center gap-3">
-                  <BookOpen className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                  <span className="flex-1 font-medium text-gray-800">{s.name}</span>
-                  <button onClick={() => deleteSubject(s.id)} className="text-gray-300 hover:text-red-500 transition-colors">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── اکائیاں (Division → Department tree) ── */}
-      {tab === "units" && (
-        <div className="space-y-4 max-w-2xl">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">پہلے تقسیم بنائیں، پھر ہر تقسیم کے تحت شعبے</p>
-            <button onClick={() => { setAddingDiv(true); setAddingDeptForDiv(null); }} className="btn-primary text-sm">
-              <Plus className="w-4 h-4" /> نئی تقسیم
-            </button>
-          </div>
-
-          {addingDiv && (
-            <div className="card p-4 border-2 border-blue-200">
-              <h3 className="font-bold text-gray-900 text-sm mb-3">نئی تقسیم شامل کریں</h3>
-              <form onSubmit={addDivision} className="flex gap-3">
-                <input className="input-urdu flex-1" placeholder="تقسیم کا نام" value={newDivName}
-                  onChange={(e) => setNewDivName(e.target.value)} required autoFocus />
-                <button type="submit" disabled={savingUnit} className="btn-primary text-sm px-4">{savingUnit ? "..." : "شامل کریں"}</button>
-                <button type="button" onClick={() => { setAddingDiv(false); setNewDivName(""); }} className="btn-secondary text-sm px-3">منسوخ</button>
-              </form>
-            </div>
-          )}
-
-          {subAccounts.length === 0 ? (
-            <div className="text-center py-14">
-              <Layers className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-gray-500 text-sm">ابھی تک کوئی تقسیم نہیں بنائی</p>
-              <p className="text-gray-400 text-xs mt-1">اوپر "نئی تقسیم" بٹن سے شروع کریں</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {subAccounts.map((div) => (
-                <div key={div.id} className="card overflow-hidden">
-                  <div className="flex items-center gap-3 px-4 py-3 bg-blue-50">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${TYPE_COLORS.division}`}>{TYPE_LABELS.division}</span>
-                    <span className="flex-1 font-semibold text-gray-900">{div.name}</span>
-                    <button onClick={() => { setAddingDeptForDiv(div.id); setNewDeptName(""); setAddingDiv(false); }}
-                      className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1 font-medium">
-                      <Plus className="w-3 h-3" /> شعبہ
-                    </button>
-                    <button onClick={() => deleteUnit(div.id)} className="text-gray-300 hover:text-red-500 transition-colors mr-1">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  {addingDeptForDiv === div.id && (
-                    <div className="px-4 py-3 bg-purple-50 border-t border-purple-100">
-                      <form onSubmit={(e) => addDepartment(e, div.id)} className="flex gap-2">
-                        <ChevronLeft className="w-4 h-4 text-purple-400 flex-shrink-0 mt-2.5" />
-                        <input className="input-urdu flex-1 text-sm py-2" placeholder="شعبے کا نام"
-                          value={newDeptName} onChange={(e) => setNewDeptName(e.target.value)} required autoFocus />
-                        <button type="submit" disabled={savingUnit} className="btn-primary text-xs px-3">{savingUnit ? "..." : "شامل"}</button>
-                        <button type="button" onClick={() => setAddingDeptForDiv(null)} className="btn-secondary text-xs px-2">منسوخ</button>
-                      </form>
-                    </div>
-                  )}
-                  {(div.children || []).length > 0 && (
-                    <div className="divide-y divide-gray-50">
-                      {(div.children || []).map((dept) => (
-                        <div key={dept.id} className="flex items-center gap-3 px-4 py-2.5 pr-8 hover:bg-gray-50">
-                          <ChevronLeft className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${TYPE_COLORS.department}`}>{TYPE_LABELS.department}</span>
-                          <span className="flex-1 text-sm text-gray-800">{dept.name}</span>
-                          <button onClick={() => deleteUnit(dept.id, div.id)} className="text-gray-300 hover:text-red-500 transition-colors">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {(div.children || []).length === 0 && addingDeptForDiv !== div.id && (
-                    <p className="text-xs text-gray-400 text-center py-2">ابھی کوئی شعبہ نہیں — اوپر "+ شعبہ" دبائیں</p>
                   )}
                 </div>
               ))}
