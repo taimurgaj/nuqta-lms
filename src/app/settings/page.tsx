@@ -5,10 +5,11 @@ import { useSession } from "next-auth/react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { User, Lock, Check, AlertCircle, ShieldCheck, Copy, Eye, EyeOff, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/app/theme-provider";
+import { displayEmail } from "@/lib/utils";
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
-  const u = session?.user as { name?: string; email?: string; isOrgAdmin?: boolean } | undefined;
+  const u = session?.user as { name?: string; email?: string; role?: string; isOrgAdmin?: boolean } | undefined;
 
   const [name, setName] = useState(u?.name || "");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -202,7 +203,7 @@ export default function SettingsPage() {
             </div>
             <div>
               <h2 className="font-bold text-gray-900">تعارف</h2>
-              <p className="text-xs text-gray-500">{u?.email}</p>
+              <p className="text-xs text-gray-500">{displayEmail(u?.email, u?.role)}</p>
             </div>
           </div>
 

@@ -18,6 +18,17 @@ export function generateUrduJoinCode(): string {
   ).join("");
 }
 
+// Ephemeral demo-sandbox accounts (see src/lib/demoSandbox.ts) get a real but
+// ugly auto-generated address like demo-teacher-abc123@ephemeral.nuqta.dev —
+// fine for actually logging in, but not something worth showing an evaluator.
+// Anywhere the UI displays "your email", mask it back to the same friendly
+// address the old shared demo accounts used.
+export function displayEmail(email: string | null | undefined, role: string | null | undefined): string {
+  if (!email) return "";
+  if (!email.endsWith("@ephemeral.nuqta.dev")) return email;
+  return role === "teacher" ? "demo-teacher@nuqta.dev" : "demo-student@nuqta.dev";
+}
+
 export function formatUrduDate(date: Date | string): string {
   const d = new Date(date);
   return d.toLocaleDateString("ur-PK", {

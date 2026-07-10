@@ -3,8 +3,10 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-// Must match DEMO_PASSWORD in src/components/DemoLoginButtons.tsx — that's
-// the "test run" flow linked from the nuqta.dev marketing site.
+// The public nuqta.dev "test run" buttons no longer sign into this fixed
+// account — they spawn a fresh ephemeral sandbox per visitor instead (see
+// src/lib/demoSandbox.ts). This org/login is kept around as a stable manual
+// testing account only; nothing public links to it anymore.
 const DEMO_PASSWORD = "NuqtaDemo2026!";
 
 async function main() {
@@ -28,9 +30,8 @@ async function main() {
     },
   });
 
-  // These are the two accounts the public "test run" demo-login buttons sign
-  // into (DemoLoginButtons.tsx) — name deliberately a plain full name, not a
-  // "Teacher ___" / "استاد ___" title+name pattern.
+  // Manual testing account (see note above) — name deliberately a plain full
+  // name, not a "Teacher ___" / "استاد ___" title+name pattern.
   const demoPw = await bcrypt.hash(DEMO_PASSWORD, 12);
   const teacher = await prisma.user.upsert({
     where: { email: "demo-teacher@nuqta.dev" },

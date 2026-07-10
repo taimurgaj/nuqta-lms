@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Building2, Check, Copy, GraduationCap, ArrowLeft } from "lucide-react";
+import { SiteNav } from "@/components/SiteNav";
 
 function toSlug(name: string) {
   // Auto-generate from ASCII org names; returns empty for pure Urdu names (user fills manually)
@@ -49,8 +50,14 @@ export default function OrgRegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError("");
+
+    if (form.adminPassword.length < 8) {
+      setError("خفیہ رمز کم از کم ۸ حروف کا ہونا چاہیے — Password must be at least 8 characters");
+      return;
+    }
+
+    setLoading(true);
     const res = await fetch("/api/orgs/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -75,7 +82,9 @@ export default function OrgRegisterPage() {
   if (success) {
     const hubUrl = `${window.location.origin}/org/${success.slug}`;
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-white flex items-center justify-center p-4" dir="rtl">
+      <div className="min-h-screen bg-gray-50">
+        <SiteNav />
+        <div className="flex items-center justify-center p-4" dir="rtl">
         <div className="w-full max-w-lg">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 rounded-2xl mb-4">
@@ -122,12 +131,15 @@ export default function OrgRegisterPage() {
             </button>
           </div>
         </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4" dir="rtl">
+    <div className="min-h-screen bg-gray-50">
+      <SiteNav />
+      <div className="flex items-center justify-center p-4" dir="rtl">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-700 rounded-2xl mb-4">
@@ -208,7 +220,6 @@ export default function OrgRegisterPage() {
                 placeholder="کم از کم ۸ حروف"
                 value={form.adminPassword}
                 onChange={(e) => setForm({ ...form, adminPassword: e.target.value })}
-                minLength={8}
                 required
               />
             </div>
@@ -234,6 +245,7 @@ export default function OrgRegisterPage() {
             <Link href="/login" className="text-blue-700 font-medium hover:underline">داخل ہوں</Link>
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

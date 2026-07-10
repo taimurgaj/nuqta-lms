@@ -14,8 +14,12 @@
 
 * { box-sizing: border-box; }
 
-/* Nastaliq font has tall ascenders — prevent clipping in all Urdu text containers */
-button, th, td, label, p, h1, h2, h3, h4, span, a, select, option {
+/* Nastaliq font has tall ascenders — prevent clipping in all Urdu text containers.
+   input/textarea don't respect `overflow: visible` the way other elements do
+   (native form controls clip their own text box regardless), so those two
+   also get extra vertical padding via .input-urdu below rather than relying
+   on this rule alone. */
+button, th, td, label, p, h1, h2, h3, h4, span, a, select, option, input, textarea {
   line-height: 2;
   overflow: visible;
 }
@@ -89,10 +93,11 @@ body {
   font-family: var(--font-urdu);
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 0.5rem 0.75rem;
+  padding: 0.65rem 0.75rem;
   width: 100%;
   background: white;
   font-size: 0.95rem;
+  line-height: 1.8;
   transition: border-color 0.2s;
 }
 .input-urdu:focus {
@@ -268,6 +273,17 @@ body {
 .dark .border-gray-100,
 .dark .border-gray-200 { border-color: #1f2937 !important; }
 
+/* Same class of bug as bg-blue-50 above, for the other status-notice colors
+   (success/error banners, not badges — those already have their own
+   .dark .badge-* overrides) — colors match badge-green/badge-red so a
+   notice box and its equivalent badge read as the same "status". */
+.dark .bg-green-50 { background-color: #064e3b !important; }
+.dark .border-green-200 { border-color: #065f46 !important; }
+.dark .text-green-700 { color: #6ee7b7 !important; }
+.dark .bg-red-50 { background-color: #7f1d1d !important; }
+.dark .border-red-200 { border-color: #991b1b !important; }
+.dark .text-red-700 { color: #fca5a5 !important; }
+
 /* hover: variants compile to their own selector (.hover\:bg-gray-50:hover) and
    aren't touched by the plain .bg-gray-50 override above — without this, a
    hovered row keeps its light background while the safety net above still
@@ -275,7 +291,7 @@ body {
 .dark .hover\:bg-gray-50:hover,
 .dark .hover\:bg-gray-100:hover { background-color: #1f2937 !important; }
 
-/* Scoped (not the broad bg-teal-*/text-teal-* safety net, which would also
+/* Scoped (not the broad bg-teal-* / text-teal-* safety net, which would also
    repaint the unrelated teal icon on the curriculum page) fix for the
    "start from curriculum" picker in the new-assignment modal — it kept its
    light mint background and dark text in dark mode, unreadable against the

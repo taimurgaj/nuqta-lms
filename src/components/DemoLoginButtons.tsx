@@ -1,11 +1,8 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { GraduationCap, Users } from "lucide-react";
-
-const DEMO_PASSWORD = "NuqtaDemo2026!";
 
 export function DemoLoginButtons() {
   return (
@@ -22,13 +19,24 @@ function DemoLoginButtonsInner() {
 
   async function tryDemo(role: "teacher" | "student") {
     setLoading(role);
-    const email = role === "teacher" ? "demo-teacher@nuqta.dev" : "demo-student@nuqta.dev";
-    const res = await signIn("credentials", { email, password: DEMO_PASSWORD, redirect: false });
-    if (res?.error) {
+
+    // Each click gets its own fresh, isolated org/class/students instead of
+    // everyone sharing one real read-write account — see src/lib/demoSandbox.ts.
+    // The spawn response sets the session cookie directly (see
+    // /api/demo/spawn), so there's no separate signIn() round trip needed —
+    // that used to mean a whole second request re-verifying a password we'd
+    // generated ourselves a moment earlier.
+    const spawnRes = await fetch("/api/demo/spawn", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role }),
+    });
+    if (!spawnRes.ok) {
       setLoading(null);
-      alert("ڈیمو لاگ ان ناکام ہوا، دوبارہ کوشش کریں");
+      alert("ڈیمو تیار نہیں ہو سکا، دوبارہ کوشش کریں");
       return;
     }
+
     router.push(role === "teacher" ? "/teacher/dashboard" : "/student/dashboard");
   }
 

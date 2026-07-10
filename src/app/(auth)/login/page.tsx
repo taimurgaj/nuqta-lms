@@ -5,6 +5,7 @@ import { signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, Eye, EyeOff, Search, MapPin, Building2, X } from "lucide-react";
+import { SiteNav } from "@/components/SiteNav";
 
 interface OrgResult {
   id: string;
@@ -100,7 +101,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4" dir="rtl">
+    <div className="min-h-screen bg-gray-50">
+      <SiteNav />
+      <div className="flex items-center justify-center p-4" dir="rtl">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-700 rounded-2xl mb-4">
@@ -259,6 +262,7 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

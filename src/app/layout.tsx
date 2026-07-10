@@ -3,7 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "نقطہ کلاس روم | Nuqta Classroom",
+  title: "Nuqta Classroom | نقطہ کلاس روم",
   description: "اردو پر مبنی کلاس روم پلیٹ فارم — اساتذہ اور طلبہ کے لیے",
 };
 

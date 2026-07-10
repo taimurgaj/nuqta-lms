@@ -8,7 +8,7 @@ import { GATE_COOKIE, isGateCookieValid } from "@/lib/pilotGate";
 // the marketing homepage with the demo-login buttons, and NextAuth's own
 // internal callback/session/csrf endpoints those buttons call.
 const GATE_EXEMPT_EXACT = new Set(["/", "/gate"]);
-const GATE_EXEMPT_PREFIXES = ["/api/gate", "/api/auth", "/_next", "/favicon.ico"];
+const GATE_EXEMPT_PREFIXES = ["/api/gate", "/api/auth", "/api/demo", "/_next", "/favicon.ico"];
 
 const PROTECTED_PREFIXES = ["/teacher", "/student", "/settings"];
 const ORG_FREE_ROUTES = ["/student/ai-tutor", "/teacher/curriculum", "/settings"];

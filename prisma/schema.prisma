@@ -21,6 +21,8 @@ model Organization {
   city      String?
   joinCode  String   @unique
   tier      String   @default("pilot") // "demo" (test-run, 5-lesson set) | "pilot" (real school, full 20-lesson set)
+  expiresAt DateTime? // set only on ephemeral per-visitor demo sandboxes (see src/lib/demoSandbox.ts) — null means persistent (a real pilot school, or the original shared demo org) OR a not-yet-claimed pooled sandbox
+  claimedAt DateTime? // null = sitting ready in the pool, unclaimed; set = an active visitor's sandbox
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -33,6 +35,7 @@ model User {
   name       String
   email      String   @unique
   password   String
+  pendingPassword String? // plaintext, set only for a pooled sandbox's teacher/student[0] until claimed — see src/lib/demoSandbox.ts
   role       String   @default("student") // "teacher" | "student" | "admin"
   isOrgAdmin Boolean  @default(false)
   orgId      String?

@@ -1,0 +1,9 @@
+{
+  "regions": ["bom1"],
+  "crons": [
+    {
+      "path": "/api/demo/cleanup",
+      "schedule": "17 4 * * *"
+    }
+  ]
+}

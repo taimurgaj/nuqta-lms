@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Lock } from "lucide-react";
+import { SiteNav } from "@/components/SiteNav";
 
 function GateFormInner() {
   const router = useRouter();
@@ -32,7 +33,9 @@ function GateFormInner() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4" dir="rtl">
+    <div className="min-h-screen bg-gray-950">
+      <SiteNav />
+      <div className="flex items-center justify-center px-4 py-12" dir="rtl">
       <div className="w-full max-w-sm bg-gray-900 border border-gray-800 rounded-2xl p-8 text-center">
         <div className="w-12 h-12 bg-blue-900/40 rounded-xl flex items-center justify-center mx-auto mb-4">
           <Lock className="w-6 h-6 text-blue-400" />
@@ -68,6 +71,7 @@ function GateFormInner() {
           </a>{" "}
           پر جائیں — وہاں رمز کی ضرورت نہیں۔
         </p>
+      </div>
       </div>
     </div>
   );

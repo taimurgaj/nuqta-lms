@@ -165,9 +165,9 @@ export default function TeacherDashboard() {
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { href: "/teacher/classes", label: "اسباق منظم کریں", icon: <Users className="w-5 h-5" />, color: "bg-blue-50 text-blue-700 border-blue-200" },
+              { href: "/teacher/classes", label: "اسباق منظم کریں", icon: <Users className="w-5 h-5" />, color: "bg-sky-50 text-sky-700 border-sky-200" },
               { href: "/teacher/assignments", label: "مشق بنائیں", icon: <ClipboardList className="w-5 h-5" />, color: "bg-orange-50 text-orange-700 border-orange-200" },
-              { href: "/teacher/curriculum", label: "کتب خانہ", icon: <BookOpen className="w-5 h-5" />, color: "bg-green-50 text-green-700 border-green-200" },
+              { href: "/teacher/curriculum", label: "کتب خانہ", icon: <BookOpen className="w-5 h-5" />, color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
               { href: "/teacher/analytics", label: "تفصیلی جائزہ", icon: <TrendingUp className="w-5 h-5" />, color: "bg-purple-50 text-purple-700 border-purple-200" },
             ].map((item) => (
               <Link key={item.href} href={item.href} className={`card p-4 flex items-center gap-3 hover:shadow-md transition-shadow border ${item.color}`}>

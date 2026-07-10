@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import { displayEmail } from "@/lib/utils";
 import {
   LayoutDashboard, BookOpen, Users, ClipboardList,
   Library, BarChart3, Brain, LogOut, Settings,
@@ -67,7 +68,7 @@ export default function Sidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 truncate">{session?.user?.name}</p>
-            <p className="text-xs text-gray-500 truncate">{session?.user?.email}</p>
+            <p className="text-xs text-gray-500 truncate">{displayEmail(session?.user?.email, role)}</p>
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
+import { SiteNav } from "@/components/SiteNav";
 
 function RegisterForm() {
   const router = useRouter();
@@ -22,8 +23,14 @@ function RegisterForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError("");
+
+    if (form.password.length < 8) {
+      setError("خفیہ رمز کم از کم ۸ حروف کا ہونا چاہیے — Password must be at least 8 characters");
+      return;
+    }
+
+    setLoading(true);
 
     const res = await fetch("/api/users/register", {
       method: "POST",
@@ -42,7 +49,9 @@ function RegisterForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-white flex items-center justify-center p-4" dir="rtl">
+    <div className="min-h-screen bg-gray-50">
+      <SiteNav />
+      <div className="flex items-center justify-center p-4" dir="rtl">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 rounded-2xl mb-4">
@@ -85,7 +94,6 @@ function RegisterForm() {
                 placeholder="کم از کم ۸ حروف"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
-                minLength={8}
                 required
               />
             </div>
@@ -135,6 +143,7 @@ function RegisterForm() {
             </Link>
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

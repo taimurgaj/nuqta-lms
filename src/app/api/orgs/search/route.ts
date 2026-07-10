@@ -7,6 +7,11 @@ export async function GET(req: NextRequest) {
 
   const orgs = await prisma.organization.findMany({
     where: {
+      // Demo-tier orgs (the original shared demo account + every ephemeral
+      // per-visitor sandbox — see src/lib/demoSandbox.ts) are never a real
+      // school a real registrant is looking for. Without this, the org
+      // picker fills up with dozens of identical "نقطہ ڈیمو اسکول" entries.
+      tier: { not: "demo" },
       OR: [
         { name: { contains: q } },
         { slug: { contains: q.toLowerCase() } },
